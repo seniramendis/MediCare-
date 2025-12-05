@@ -1,28 +1,42 @@
 <?php
+// --- 1. SESSION & SECURITY CHECK ---
+session_start();
+
+// If the user is NOT logged in, kick them to the login page immediately.
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit(); // Stop this script from running
+}
+
+// --- 2. PAGE SETUP ---
 $page_title = "Book Appointment";
 include 'header.php';
 include 'db_connect.php';
 
-// --- 1. HANDLE FORM SUBMISSION ---
 $message = "";
-$msg_type = ""; // 'success' or 'error'
+$msg_type = "";
 
+// --- 3. FORM HANDLING ---
 if (isset($_POST['book_appointment'])) {
-    // Collect Data
+    // Collect Inputs
     $name = mysqli_real_escape_string($conn, $_POST['name']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $phone = mysqli_real_escape_string($conn, $_POST['phone']);
-    $doctor = mysqli_real_escape_string($conn, $_POST['doctor']);
+    $reason = mysqli_real_escape_string($conn, $_POST['reason']);
+    $doctor_id = mysqli_real_escape_string($conn, $_POST['doctor']);
+
+    // Combine Date & Time for SQL
     $date = $_POST['date'];
     $time = $_POST['time'];
-    $reason = mysqli_real_escape_string($conn, $_POST['reason']);
+    $combined_datetime = $date . ' ' . $time . ':00'; // Format: YYYY-MM-DD HH:MM:SS
 
-    // Check if user is logged in (to save user_id)
-    $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : "NULL";
+    // Get Patient ID (We are 100% sure this exists now because of the check at the top)
+    $patient_id = $_SESSION['user_id'];
 
     // Insert into Database
-    $sql = "INSERT INTO appointments (user_id, patient_name, email, phone, doctor_name, appointment_date, appointment_time, reason) 
-            VALUES ($user_id, '$name', '$email', '$phone', '$doctor', '$date', '$time', '$reason')";
+    // Note: We use the logged-in ID for 'patient_id'
+    $sql = "INSERT INTO appointments (patient_id, doctor_id, appointment_time, reason, status) 
+            VALUES ('$patient_id', '$doctor_id', '$combined_datetime', '$reason', 'pending')";
 
     if (mysqli_query($conn, $sql)) {
         $message = "Appointment Booked Successfully! We will contact you shortly.";
@@ -33,13 +47,13 @@ if (isset($_POST['book_appointment'])) {
     }
 }
 
-// --- 2. FETCH DOCTORS FOR DROPDOWN ---
+// Fetch Doctors for the dropdown
 $doc_sql = "SELECT * FROM doctors";
 $doc_result = mysqli_query($conn, $doc_sql);
 ?>
 
 <style>
-    /* ===== PAGE HEADER ===== */
+    /* Page Header */
     .page-header {
         background: linear-gradient(135deg, #f8f9fa 0%, #eef2ff 100%);
         padding: 60px 0;
@@ -49,23 +63,22 @@ $doc_result = mysqli_query($conn, $doc_sql);
 
     .page-header h1 {
         font-size: 42px;
-        color: var(--primary-color);
+        color: #0c5adb;
         font-weight: 800;
     }
 
     .page-header p {
-        color: var(--text-light);
+        color: #6b7280;
         font-size: 18px;
     }
 
-    /* ===== BOOKING CONTAINER ===== */
+    /* Main Container */
     .booking-wrapper {
         max-width: 1100px;
         margin: 0 auto 80px auto;
         padding: 0 20px;
         display: grid;
         grid-template-columns: 1.5fr 1fr;
-        /* Form takes more space */
         gap: 0;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
         border-radius: 20px;
@@ -73,17 +86,17 @@ $doc_result = mysqli_query($conn, $doc_sql);
         background: white;
     }
 
-    /* LEFT SIDE: FORM */
+    /* Form Section */
     .booking-form {
         padding: 50px;
     }
 
     .form-title {
         font-size: 24px;
-        color: var(--text-dark);
+        color: #1f2937;
         margin-bottom: 30px;
         font-weight: 700;
-        border-left: 5px solid var(--primary-color);
+        border-left: 5px solid #0c5adb;
         padding-left: 15px;
     }
 
@@ -93,7 +106,7 @@ $doc_result = mysqli_query($conn, $doc_sql);
 
     .form-group label {
         display: block;
-        color: var(--text-dark);
+        color: #1f2937;
         margin-bottom: 8px;
         font-weight: 500;
         font-size: 14px;
@@ -111,7 +124,7 @@ $doc_result = mysqli_query($conn, $doc_sql);
     }
 
     .form-control:focus {
-        border-color: var(--primary-color);
+        border-color: #0c5adb;
         background: white;
         box-shadow: 0 0 0 4px rgba(12, 90, 219, 0.05);
     }
@@ -130,7 +143,7 @@ $doc_result = mysqli_query($conn, $doc_sql);
     .btn-submit {
         width: 100%;
         padding: 15px;
-        background: var(--primary-color);
+        background: #0c5adb;
         color: white;
         border: none;
         border-radius: 50px;
@@ -142,13 +155,13 @@ $doc_result = mysqli_query($conn, $doc_sql);
     }
 
     .btn-submit:hover {
-        background: var(--primary-dark);
+        background: #0946a8;
         transform: translateY(-2px);
     }
 
-    /* RIGHT SIDE: INFO PANEL */
+    /* Info Section (Right Side) */
     .booking-info {
-        background: var(--primary-color);
+        background: #0c5adb;
         color: white;
         padding: 50px;
         display: flex;
@@ -158,7 +171,7 @@ $doc_result = mysqli_query($conn, $doc_sql);
         overflow: hidden;
     }
 
-    /* Decorative circles */
+    /* Decorative Circles */
     .booking-info::before {
         content: '';
         position: absolute;
@@ -205,7 +218,7 @@ $doc_result = mysqli_query($conn, $doc_sql);
         line-height: 1.6;
     }
 
-    /* ALERTS */
+    /* Alerts */
     .alert {
         padding: 15px;
         border-radius: 8px;
@@ -226,6 +239,7 @@ $doc_result = mysqli_query($conn, $doc_sql);
         border: 1px solid #fecaca;
     }
 
+    /* Responsive */
     @media (max-width: 900px) {
         .booking-wrapper {
             grid-template-columns: 1fr;
@@ -243,11 +257,8 @@ $doc_result = mysqli_query($conn, $doc_sql);
 </div>
 
 <div class="booking-wrapper">
-
-    <!-- LEFT: FORM -->
     <div class="booking-form">
         <h2 class="form-title">Appointment Details</h2>
-
         <?php if ($message != ""): ?>
             <div class="alert alert-<?php echo $msg_type; ?>">
                 <?php echo $message; ?>
@@ -255,12 +266,11 @@ $doc_result = mysqli_query($conn, $doc_sql);
         <?php endif; ?>
 
         <form method="POST">
-            <!-- Row 1: Name & Phone -->
             <div class="row-inputs">
                 <div class="form-group">
                     <label>Patient Name</label>
                     <input type="text" name="name" class="form-control" placeholder="Full Name"
-                        value="<?php echo isset($_SESSION['username']) ? $_SESSION['username'] : ''; ?>" required>
+                        value="<?php echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : ''; ?>" required>
                 </div>
                 <div class="form-group">
                     <label>Phone Number</label>
@@ -268,7 +278,6 @@ $doc_result = mysqli_query($conn, $doc_sql);
                 </div>
             </div>
 
-            <!-- Row 2: Email & Doctor -->
             <div class="row-inputs">
                 <div class="form-group">
                     <label>Email Address</label>
@@ -278,11 +287,10 @@ $doc_result = mysqli_query($conn, $doc_sql);
                     <label>Select Doctor</label>
                     <select name="doctor" class="form-control" required>
                         <option value="" disabled selected>Choose a Specialist</option>
-                        <!-- PHP Loop to fill Dropdown -->
                         <?php
                         if (mysqli_num_rows($doc_result) > 0) {
                             while ($row = mysqli_fetch_assoc($doc_result)) {
-                                echo "<option value='" . $row['name'] . "'>" . $row['name'] . " (" . $row['specialty'] . ")</option>";
+                                echo "<option value='" . $row['id'] . "'>" . $row['name'] . " (" . $row['specialty'] . ")</option>";
                             }
                         }
                         ?>
@@ -290,7 +298,6 @@ $doc_result = mysqli_query($conn, $doc_sql);
                 </div>
             </div>
 
-            <!-- Row 3: Date & Time -->
             <div class="row-inputs">
                 <div class="form-group">
                     <label>Preferred Date</label>
@@ -302,7 +309,6 @@ $doc_result = mysqli_query($conn, $doc_sql);
                 </div>
             </div>
 
-            <!-- Reason -->
             <div class="form-group">
                 <label>Reason for Visit</label>
                 <textarea name="reason" class="form-control" placeholder="Briefly describe your symptoms or reason for appointment..."></textarea>
@@ -312,7 +318,6 @@ $doc_result = mysqli_query($conn, $doc_sql);
         </form>
     </div>
 
-    <!-- RIGHT: INFO -->
     <div class="booking-info">
         <div class="info-item">
             <i class="fas fa-phone-alt"></i>
@@ -320,7 +325,6 @@ $doc_result = mysqli_query($conn, $doc_sql);
             <p>For immediate medical attention, please do not use this form. Call our emergency hotline immediately.</p>
             <p style="font-size: 20px; font-weight: 700; margin-top: 10px;">1990 / +94 112 345 678</p>
         </div>
-
         <div class="info-item">
             <i class="fas fa-clock"></i>
             <h3>Working Hours</h3>
@@ -328,14 +332,12 @@ $doc_result = mysqli_query($conn, $doc_sql);
             <p>Saturday: 9:00 AM - 5:00 PM</p>
             <p>Sunday: Closed</p>
         </div>
-
         <div class="info-item">
             <i class="fas fa-info-circle"></i>
             <h3>Need Help?</h3>
             <p>If you have trouble booking online, our front desk support team is available to assist you during working hours.</p>
         </div>
     </div>
-
 </div>
 
 <?php include 'footer.php'; ?>

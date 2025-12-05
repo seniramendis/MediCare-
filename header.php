@@ -17,14 +17,16 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- DYNAMIC TITLE -->
     <title><?php echo isset($page_title) ? $page_title . " | MediCare+" : "MediCare+"; ?></title>
 
+    <!-- FAVICON -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230c5adb%22/><path fill=%22%23ffffff%22 d=%22M35 20h30v25h25v30h-25v25h-30v-25h-25v-30h25z%22/></svg>">
 
     <script src="https://kit.fontawesome.com/9e166a3863.js" crossorigin="anonymous"></script>
 
     <style>
-        /* ===== GLOBAL PROFESSIONAL STYLES (YOUR ORIGINAL DESIGN) ===== */
+        /* ===== GLOBAL PROFESSIONAL STYLES ===== */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
         :root {
@@ -286,11 +288,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <li><a href="Blog.php" class="<?= $current_page == 'Blog.php' ? 'active' : '' ?>">Blog</a></li>
 
                 <?php
-                // --- LOGIC CHANGE: ONLY SHOW PROFILE IF NOT ADMIN ---
-                // If user is logged in AND their role is NOT 'admin'
+                // ONLY SHOW PROFILE IF NOT ADMIN
                 if (isset($_SESSION['user_id']) && $_SESSION['role'] !== 'admin'):
                 ?>
 
+                    <!-- Inbox Icon -->
                     <li>
                         <a href="inbox.php" class="icon-btn" title="My Messages">
                             <i class="fas fa-comment-alt"></i>
@@ -299,12 +301,15 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
                     <li style="display: flex; align-items: center; gap: 15px;">
 
+                        <!-- DASHBOARD BUTTON -->
+                        <!-- This ensures Doctors go to their own dashboard -->
                         <?php if ($_SESSION['role'] == 'patient'): ?>
                             <a href="dashboard_patient.php" class="btn" style="padding: 8px 20px; font-size: 14px;">Dashboard</a>
                         <?php elseif ($_SESSION['role'] == 'doctor'): ?>
                             <a href="dashboard_doctor.php" class="btn" style="padding: 8px 20px; font-size: 14px;">Dashboard</a>
                         <?php endif; ?>
 
+                        <!-- USER DROPDOWN -->
                         <div class="user-dropdown">
                             <div class="user-trigger">
                                 <span>Hi, <?php echo htmlspecialchars($_SESSION['username']); ?></span>
@@ -315,7 +320,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                 <a href="edit_profile.php">
                                     <i class="fas fa-user-edit"></i> Edit Profile
                                 </a>
-
                                 <a href="logout.php" style="color: #ef4444;">
                                     <i class="fas fa-sign-out-alt"></i> Logout
                                 </a>
@@ -325,6 +329,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     </li>
 
                 <?php else: ?>
+                    <!-- LOGGED OUT (OR ADMIN) STATE -->
                     <li><a href="login.php" class="btn" style="padding: 8px 20px; font-size: 14px;">Login</a></li>
                 <?php endif; ?>
             </ul>
