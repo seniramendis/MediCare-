@@ -14,13 +14,19 @@ echo '<div style="font-size: 32px; font-weight: 700; color: #dc3545; margin: 10p
 if (mysqli_num_rows($list_q) > 0) {
     echo '<table style="width:100%; border-collapse:collapse; font-size:13px;">';
     while ($bill = mysqli_fetch_assoc($list_q)) {
-        echo '<tr><td style="padding:10px 0; border-bottom:1px solid #eee;">' . $bill['service_name'] . '</td>';
+        // --- FIX: Read from the correct column 'service_description' ---
+        $svc_name = $bill['service_description'];
+
+        echo '<tr><td style="padding:10px 0; border-bottom:1px solid #eee;">' . htmlspecialchars($svc_name) . '</td>';
         echo '<td style="padding:10px 0; border-bottom:1px solid #eee; font-weight:bold;">' . number_format($bill['amount'], 2) . '</td>';
         echo '<td style="padding:10px 0; border-bottom:1px solid #eee; text-align:right;">';
         echo '<form action="payment_gateway.php" method="POST" style="margin:0;">';
         echo '<input type="hidden" name="invoice_id" value="' . $bill['id'] . '">';
         echo '<input type="hidden" name="amount" value="' . $bill['amount'] . '">';
-        echo '<input type="hidden" name="service_name" value="' . $bill['service_name'] . '">';
+
+        // --- FIX: Send it as 'service_name' so payment_gateway.php understands it ---
+        echo '<input type="hidden" name="service_name" value="' . htmlspecialchars($svc_name) . '">';
+
         echo '<button type="submit" name="pay_now" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Pay Now</button>';
         echo '</form></td></tr>';
     }

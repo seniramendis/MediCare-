@@ -43,21 +43,30 @@ if (isset($_POST['confirm_payment'])) {
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Checkout | Medicare Plus</title>
     <link rel="icon" href="images/Favicon.png" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://kit.fontawesome.com/9e166a3863.js" crossorigin="anonymous"></script>
 
     <style>
+        :root {
+            --primary: #0c5adb;
+            --primary-dark: #073d96;
+            --accent: #f8f9fa;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+        }
+
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
         }
 
         body {
-            background-color: #f3f6f8;
+            background-color: #eef2f6;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -65,87 +74,160 @@ if (isset($_POST['confirm_payment'])) {
             padding: 20px;
         }
 
-        .checkout-wrapper {
+        /* Main Container */
+        .payment-container {
             display: flex;
-            background: white;
             width: 100%;
-            max-width: 900px;
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            max-width: 950px;
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Left Side: Summary (Colored) */
+        .summary-panel {
+            flex: 1;
+            background: linear-gradient(135deg, #0c5adb 0%, #06b6d4 100%);
+            color: white;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
             overflow: hidden;
         }
 
-        .payment-section {
-            flex: 1.5;
-            padding: 50px;
+        /* Decorative circles */
+        .summary-panel::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
         }
 
-        .summary-section {
-            flex: 1;
-            background: #f8faff;
-            padding: 50px;
-            border-left: 1px solid #eef2f6;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+        .summary-panel::after {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            left: -50px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
         }
 
-        h2 {
+        .company-logo {
             font-size: 24px;
-            color: #1a1f36;
-            margin-bottom: 30px;
             font-weight: 700;
+            letter-spacing: 1px;
+            z-index: 2;
         }
 
-        h3 {
-            font-size: 14px;
+        .order-details {
+            z-index: 2;
+            margin-top: 40px;
+        }
+
+        .detail-item {
+            margin-bottom: 25px;
+        }
+
+        .detail-label {
+            font-size: 12px;
             text-transform: uppercase;
-            color: #8792a2;
-            letter-spacing: 0.5px;
-            margin-bottom: 20px;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 18px;
             font-weight: 600;
         }
 
-        .form-group {
-            margin-bottom: 24px;
+        .total-amount {
+            font-size: 42px;
+            font-weight: 700;
+            margin-top: 5px;
         }
 
-        .form-group label {
+        .footer-note {
+            font-size: 12px;
+            opacity: 0.7;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Right Side: Form (White) */
+        .form-panel {
+            flex: 1.4;
+            padding: 50px;
+            background: #ffffff;
+        }
+
+        .form-header {
+            margin-bottom: 30px;
+        }
+
+        .form-header h2 {
+            font-size: 24px;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .card-icons {
+            display: flex;
+            gap: 10px;
+            color: var(--text-light);
+            font-size: 24px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
             display: block;
             font-size: 13px;
-            font-weight: 600;
-            color: #3c4257;
+            font-weight: 500;
+            color: var(--text-dark);
             margin-bottom: 8px;
         }
 
-        .input-wrapper {
+        .input-box {
             position: relative;
         }
 
-        .input-icon {
+        .input-box input {
+            width: 100%;
+            padding: 14px 15px 14px 45px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: 0.3s;
+            background: #f8fafc;
+        }
+
+        .input-box i {
             position: absolute;
-            left: 16px;
+            left: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: #aab7c4;
-            font-size: 16px;
+            color: #94a3b8;
         }
 
-        input {
-            width: 100%;
-            padding: 14px 16px 14px 45px;
-            border: 1px solid #e6e8eb;
-            border-radius: 8px;
-            font-size: 16px;
-            color: #3c4257;
-            transition: all 0.2s ease;
-            background: #fff;
-        }
-
-        input:focus {
-            border-color: #0062cc;
-            box-shadow: 0 0 0 4px rgba(0, 98, 204, 0.1);
+        .input-box input:focus {
             outline: none;
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(12, 90, 219, 0.1);
         }
 
         .row {
@@ -159,165 +241,144 @@ if (isset($_POST['confirm_payment'])) {
 
         .btn-pay {
             width: 100%;
-            background: #0062cc;
-            color: white;
             padding: 16px;
+            background: var(--primary);
+            color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-top: 10px;
+            transition: 0.3s;
+            margin-top: 20px;
+            box-shadow: 0 10px 20px rgba(12, 90, 219, 0.2);
         }
 
         .btn-pay:hover {
-            background: #0056b3;
+            background: var(--primary-dark);
+            transform: translateY(-2px);
         }
 
-        .cancel-link {
+        .cancel-btn {
             display: block;
             text-align: center;
             margin-top: 20px;
-            color: #697386;
+            color: var(--text-light);
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
+            transition: 0.3s;
         }
 
-        .receipt-card {
-            background: white;
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-            border: 1px solid #eef2f6;
+        .cancel-btn:hover {
+            color: var(--text-dark);
         }
 
-        .item-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            font-size: 14px;
-            color: #4f566b;
-        }
+        @media (max-width: 850px) {
+            .payment-container {
+                flex-direction: column;
+            }
 
-        .total-row {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px dashed #e6e8eb;
-            font-size: 22px;
-            font-weight: 700;
-            color: #1a1f36;
-        }
+            .summary-panel {
+                padding: 30px;
+                border-radius: 20px 20px 0 0;
+            }
 
-        .secure-badge {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 30px;
-            color: #008000;
-            font-size: 13px;
-            font-weight: 500;
-            background: #e6fffa;
-            padding: 10px;
-            border-radius: 6px;
-        }
-
-        @media (max-width: 768px) {
-            .checkout-wrapper {
-                flex-direction: column-reverse;
+            .form-panel {
+                padding: 30px;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="checkout-wrapper">
-        <div class="payment-section">
-            <h2>Payment Details</h2>
+
+    <div class="payment-container">
+
+        <div class="summary-panel">
+            <div class="company-logo">
+                <i class="fas fa-heartbeat"></i> MediCare+
+            </div>
+
+            <div class="order-details">
+                <div class="detail-item">
+                    <div class="detail-label">Service Description</div>
+                    <div class="detail-value"><?php echo htmlspecialchars($service_name); ?></div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">Invoice Number</div>
+                    <div class="detail-value">#<?php echo str_pad($invoice_id, 6, '0', STR_PAD_LEFT); ?></div>
+                </div>
+
+                <div class="detail-item" style="margin-top: 40px;">
+                    <div class="detail-label">Total to Pay</div>
+                    <div class="total-amount">LKR <?php echo number_format((float)$amount, 2); ?></div>
+                </div>
+            </div>
+
+            <div class="footer-note">
+                <i class="fas fa-lock"></i> Secure 256-bit SSL Encrypted payment
+            </div>
+        </div>
+
+        <div class="form-panel">
+            <div class="form-header">
+                <h2>Payment Details</h2>
+                <div class="card-icons">
+                    <i class="fab fa-cc-visa" style="color: #1a1f71;"></i>
+                    <i class="fab fa-cc-mastercard" style="color: #eb001b;"></i>
+                    <i class="fab fa-cc-amex" style="color: #2e77bc;"></i>
+                </div>
+            </div>
+
             <form method="POST">
                 <input type="hidden" name="invoice_id" value="<?php echo $invoice_id; ?>">
                 <input type="hidden" name="amount" value="<?php echo $amount; ?>">
 
-                <div class="form-group">
-                    <label>Cardholder Name</label>
-                    <div class="input-wrapper">
-                        <i class="far fa-user input-icon"></i>
-                        <input type="text" placeholder="John Doe" required>
+                <div class="input-group">
+                    <label>Name on Card</label>
+                    <div class="input-box">
+                        <i class="far fa-user"></i>
+                        <input type="text" placeholder="e.g. Jehan Fernando" required>
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="input-group">
                     <label>Card Number</label>
-                    <div class="input-wrapper">
-                        <i class="far fa-credit-card input-icon"></i>
+                    <div class="input-box">
+                        <i class="far fa-credit-card"></i>
                         <input type="text" placeholder="0000 0000 0000 0000" maxlength="19" required>
                     </div>
                 </div>
 
                 <div class="row">
-                    <div class="col form-group">
-                        <label>Expiration</label>
-                        <div class="input-wrapper">
-                            <i class="far fa-calendar-alt input-icon"></i>
+                    <div class="col input-group">
+                        <label>Expiry Date</label>
+                        <div class="input-box">
+                            <i class="far fa-calendar-alt"></i>
                             <input type="text" placeholder="MM / YY" maxlength="5" required>
                         </div>
                     </div>
-                    <div class="col form-group">
-                        <label>CVC</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock input-icon"></i>
+                    <div class="col input-group">
+                        <label>CVV / CVC</label>
+                        <div class="input-box">
+                            <i class="fas fa-lock"></i>
                             <input type="password" placeholder="123" maxlength="4" required>
                         </div>
                     </div>
                 </div>
 
                 <button type="submit" name="confirm_payment" class="btn-pay">
-                    <i class="fas fa-lock"></i> Pay LKR <?php echo number_format((float)$amount, 2); ?>
+                    Confirm Payment
                 </button>
 
-                <a href="dashboard_patient.php" class="cancel-link">Cancel and Return</a>
+                <a href="dashboard_patient.php" class="cancel-btn">Cancel Transaction</a>
             </form>
         </div>
 
-        <div class="summary-section">
-            <h3>Order Summary</h3>
-            <div class="receipt-card">
-                <div style="text-align:center; margin-bottom:20px;">
-                    <div style="width:50px; height:50px; background:#e3f2fd; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:#0062cc; font-size:20px;">
-                        <i class="fas fa-file-medical-alt"></i>
-                    </div>
-                    <h4 style="margin-top:10px; color:#333;">Medical Invoice</h4>
-                </div>
-                <div class="item-row">
-                    <span>Invoice ID</span>
-                    <span style="font-weight:600;">#<?php echo str_pad($invoice_id, 6, '0', STR_PAD_LEFT); ?></span>
-                </div>
-                <div class="item-row">
-                    <span>Service</span>
-                    <span style="font-weight:600; color:#333;"><?php echo htmlspecialchars($service_name); ?></span>
-                </div>
-                <div class="item-row">
-                    <span>Date</span>
-                    <span><?php echo date('M d, Y'); ?></span>
-                </div>
-                <div class="total-row">
-                    <span>Total</span>
-                    <span style="color:#0062cc;">LKR <?php echo number_format((float)$amount, 2); ?></span>
-                </div>
-            </div>
-            <div class="secure-badge">
-                <i class="fas fa-shield-alt"></i> Payments are secure and encrypted
-            </div>
-        </div>
     </div>
+
 </body>
 
 </html>
