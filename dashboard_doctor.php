@@ -12,15 +12,29 @@ $doctor_id = $_SESSION['user_id'];
 $doctor_name = $_SESSION['username'];
 $display_name = trim(str_ireplace("Dr.", "", $doctor_name));
 
-// --- PHP ACTIONS ---
+// --- HANDLE PRESCRIPTION SUBMISSION (UPDATED) ---
 if (isset($_POST['send_rx'])) {
     $p_id = $_POST['rx_patient_id'];
     $diag = mysqli_real_escape_string($conn, $_POST['diagnosis']);
     $meds = mysqli_real_escape_string($conn, $_POST['medication']);
-    $sql = "INSERT INTO prescriptions (doctor_id, patient_id, diagnosis, medicine_list, dosage_instructions) VALUES ('$doctor_id', '$p_id', '$diag', 'General Rx', '$meds')";
-    mysqli_query($conn, $sql);
+
+    // INSERT query with the new 'dosage_instructions' column
+    $sql = "INSERT INTO prescriptions (doctor_id, patient_id, diagnosis, medicine_list, dosage_instructions) 
+            VALUES ('$doctor_id', '$p_id', '$diag', 'General Rx', '$meds')";
+
+    if (mysqli_query($conn, $sql)) {
+        // ✅ SUCCESS POPUP
+        echo "<script>
+                alert('✅ Prescription Sent Successfully!'); 
+                window.location.href='dashboard_doctor.php';
+              </script>";
+    } else {
+        // ❌ ERROR POPUP
+        echo "<script>alert('Error: " . mysqli_error($conn) . "');</script>";
+    }
 }
 
+// --- HANDLE INVOICE SUBMISSION ---
 if (isset($_POST['send_bill'])) {
     $appt_val = $_POST['bill_appt_id'];
     list($appt_id, $pat_id) = explode('_', $appt_val);
@@ -29,12 +43,11 @@ if (isset($_POST['send_bill'])) {
 
     $check = mysqli_query($conn, "SELECT COUNT(*) as count FROM invoices WHERE appointment_id='$appt_id'");
     if (mysqli_fetch_assoc($check)['count'] < 2) {
-        // FIX: Changed 'service_name' to 'service_description' to match your DB
-        $sql = "INSERT INTO invoices (patient_id, doctor_id, appointment_id, amount, service_description, status) VALUES ('$pat_id', '$doctor_id', '$appt_id', '$amount', '$service', 'unpaid')";
+        // Ensure table has 'service_name' or change this query to match your DB column
+        $sql = "INSERT INTO invoices (patient_id, doctor_id, appointment_id, amount, service_name, status) VALUES ('$pat_id', '$doctor_id', '$appt_id', '$amount', '$service', 'unpaid')";
         if (mysqli_query($conn, $sql)) {
-            echo "<script>alert('✅ Invoice sent!');</script>";
+            echo "<script>alert('✅ Invoice sent!'); window.location.href='dashboard_doctor.php';</script>";
         } else {
-            // Added Error Reporting so you can see if it fails
             echo "<script>alert('Error: " . mysqli_error($conn) . "');</script>";
         }
     } else {
@@ -258,7 +271,9 @@ $confirmed_appts = mysqli_query($conn, "SELECT a.id, a.patient_id, a.appointment
                         <?php endwhile; ?>
                     </select>
                     <input type="text" name="diagnosis" class="form-control" placeholder="Diagnosis" required>
-                    <textarea name="medication" class="form-control" placeholder="Medication Details..." required></textarea>
+
+                    <textarea name="medication" class="form-control" placeholder="Medication & Dosage Instructions..." required></textarea>
+
                     <button type="submit" name="send_rx" class="btn-action">Send Rx</button>
                 </form>
             </div>

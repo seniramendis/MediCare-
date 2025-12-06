@@ -1,6 +1,8 @@
 <?php
 session_start();
 include 'db_connect.php';
+
+// 1. SECURITY CHECK
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
@@ -8,6 +10,15 @@ if (!isset($_SESSION['user_id'])) {
 
 $patient_id = $_SESSION['user_id'];
 $patient_name = $_SESSION['username'];
+
+// --- HANDLE APPOINTMENT CANCELLATION ---
+if (isset($_GET['cancel_id'])) {
+    $cancel_id = (int)$_GET['cancel_id'];
+    // Only allow deleting own appointments that are not completed
+    mysqli_query($conn, "DELETE FROM appointments WHERE id='$cancel_id' AND patient_id='$patient_id' AND status != 'Completed'");
+    header("Location: dashboard_patient.php");
+    exit();
+}
 
 // Stats
 $appts_query = mysqli_query($conn, "SELECT COUNT(*) as total FROM appointments WHERE patient_id='$patient_id'");
@@ -19,18 +30,15 @@ $my_rx_count = mysqli_fetch_assoc($rx_query)['total'];
 $due_query = mysqli_query($conn, "SELECT SUM(amount) as total FROM invoices WHERE patient_id='$patient_id' AND status='unpaid'");
 $total_due = mysqli_fetch_assoc($due_query)['total'] ?? 0;
 
-// FIX: JOIN with 'doctors' table instead of 'users'
-$upcoming_query = "SELECT a.*, d.name as doc_name FROM appointments a JOIN doctors d ON a.doctor_id = d.id WHERE a.patient_id='$patient_id' AND a.status != 'Completed' ORDER BY a.appointment_time ASC";
+// FETCH UPCOMING APPOINTMENTS
+$upcoming_query = "SELECT a.*, d.name as doc_name 
+                   FROM appointments a 
+                   JOIN doctors d ON a.doctor_id = d.id 
+                   WHERE a.patient_id='$patient_id' AND a.status != 'Completed' 
+                   ORDER BY a.appointment_time ASC";
 $res_upcoming = mysqli_query($conn, $upcoming_query);
 
-// FIX: JOIN with 'doctors' table
-$history_query = "SELECT a.*, d.name as doc_name FROM appointments a JOIN doctors d ON a.doctor_id = d.id WHERE a.patient_id='$patient_id' AND a.status = 'Completed' ORDER BY a.appointment_time DESC";
-$res_history = mysqli_query($conn, $history_query);
-
-// FIX: JOIN with 'doctors' table for Prescriptions
-$res_rx = mysqli_query($conn, "SELECT p.*, d.name as doc_name FROM prescriptions p JOIN doctors d ON p.doctor_id = d.id WHERE p.patient_id='$patient_id' ORDER BY p.created_at DESC");
-
-// Payment History
+// PAYMENT HISTORY
 $paid_history = mysqli_query($conn, "SELECT * FROM payments WHERE patient_id='$patient_id' ORDER BY paid_at DESC LIMIT 5");
 ?>
 
@@ -130,7 +138,7 @@ $paid_history = mysqli_query($conn, "SELECT * FROM payments WHERE patient_id='$p
         }
 
         .pay-table td {
-            padding: 10px 0;
+            padding: 12px 0;
             border-bottom: 1px solid #f9f9f9;
         }
 
@@ -156,6 +164,22 @@ $paid_history = mysqli_query($conn, "SELECT * FROM payments WHERE patient_id='$p
         .Pending {
             background: #fff3e0;
             color: #f59e0b;
+        }
+
+        .btn-cancel {
+            color: #dc3545;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            background: #fee2e2;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+
+        .btn-cancel:hover {
+            background: #dc3545;
+            color: white;
         }
     </style>
 </head>
@@ -211,13 +235,19 @@ $paid_history = mysqli_query($conn, "SELECT * FROM payments WHERE patient_id='$p
                         <th>Amount</th>
                         <th>Method</th>
                     </tr>
-                    <?php while ($h = mysqli_fetch_assoc($paid_history)): ?>
+                    <?php if (mysqli_num_rows($paid_history) > 0): ?>
+                        <?php while ($h = mysqli_fetch_assoc($paid_history)): ?>
+                            <tr>
+                                <td><?= date('M d', strtotime($h['paid_at'])) ?></td>
+                                <td style="color: #28a745; font-weight:bold;">LKR <?= number_format($h['amount'], 2) ?></td>
+                                <td><?= $h['payment_method'] ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
                         <tr>
-                            <td><?= date('M d', strtotime($h['paid_at'])) ?></td>
-                            <td style="color: #28a745; font-weight:bold;">LKR <?= number_format($h['amount'], 2) ?></td>
-                            <td><?= $h['payment_method'] ?></td>
+                            <td colspan="3" style="text-align:center; color:#999;">No payment history found.</td>
                         </tr>
-                    <?php endwhile; ?>
+                    <?php endif; ?>
                 </table>
             </div>
         </div>
@@ -229,14 +259,28 @@ $paid_history = mysqli_query($conn, "SELECT * FROM payments WHERE patient_id='$p
                     <th>Doctor</th>
                     <th>Date</th>
                     <th>Status</th>
+                    <th>Action</th>
                 </tr>
-                <?php while ($a = mysqli_fetch_assoc($res_upcoming)): ?>
+                <?php if (mysqli_num_rows($res_upcoming) > 0): ?>
+                    <?php while ($a = mysqli_fetch_assoc($res_upcoming)):
+                        // --- FIX FOR "DR. DR." ISSUE ---
+                        // We remove "Dr." (case insensitive) from the DB name first, then add it back cleanly.
+                        $clean_name = trim(str_ireplace(["Dr.", "Dr "], "", $a['doc_name']));
+                    ?>
+                        <tr>
+                            <td><strong>Dr. <?= htmlspecialchars($clean_name) ?></strong></td>
+                            <td><?= date('M d, Y - h:i A', strtotime($a['appointment_time'])) ?></td>
+                            <td><span class="status-badge <?= $a['status'] ?>"><?= $a['status'] ?></span></td>
+                            <td>
+                                <a href="?cancel_id=<?= $a['id'] ?>" class="btn-cancel" onclick="return confirm('Cancel this appointment?');">Cancel</a>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                <?php else: ?>
                     <tr>
-                        <td>Dr. <?= $a['doc_name'] ?></td>
-                        <td><?= date('M d, Y - h:i A', strtotime($a['appointment_time'])) ?></td>
-                        <td><span class="status-badge <?= $a['status'] ?>"><?= $a['status'] ?></span></td>
+                        <td colspan="4" style="text-align:center; color:#999;">No upcoming appointments.</td>
                     </tr>
-                <?php endwhile; ?>
+                <?php endif; ?>
             </table>
         </div>
     </div>
@@ -246,7 +290,7 @@ $paid_history = mysqli_query($conn, "SELECT * FROM payments WHERE patient_id='$p
             $("#live-bills-container").load("load_bills.php");
             setInterval(function() {
                 $("#live-bills-container").load("load_bills.php");
-            }, 2000);
+            }, 3000);
         });
     </script>
 
