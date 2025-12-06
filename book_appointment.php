@@ -1,343 +1,200 @@
 <?php
-// --- 1. SESSION & SECURITY CHECK ---
+ob_start();
 session_start();
-
-// If the user is NOT logged in, kick them to the login page immediately.
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit(); // Stop this script from running
-}
-
-// --- 2. PAGE SETUP ---
-$page_title = "Book Appointment";
-include 'header.php';
 include 'db_connect.php';
 
-$message = "";
-$msg_type = "";
-
-// --- 3. FORM HANDLING ---
-if (isset($_POST['book_appointment'])) {
-    // Collect Inputs
-    $name = mysqli_real_escape_string($conn, $_POST['name']);
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
-    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
-    $reason = mysqli_real_escape_string($conn, $_POST['reason']);
-    $doctor_id = mysqli_real_escape_string($conn, $_POST['doctor']);
-
-    // Combine Date & Time for SQL
-    $date = $_POST['date'];
-    $time = $_POST['time'];
-    $combined_datetime = $date . ' ' . $time . ':00'; // Format: YYYY-MM-DD HH:MM:SS
-
-    // Get Patient ID (We are 100% sure this exists now because of the check at the top)
-    $patient_id = $_SESSION['user_id'];
-
-    // Insert into Database
-    // Note: We use the logged-in ID for 'patient_id'
-    $sql = "INSERT INTO appointments (patient_id, doctor_id, appointment_time, reason, status) 
-            VALUES ('$patient_id', '$doctor_id', '$combined_datetime', '$reason', 'pending')";
-
-    if (mysqli_query($conn, $sql)) {
-        $message = "Appointment Booked Successfully! We will contact you shortly.";
-        $msg_type = "success";
-    } else {
-        $message = "Error: " . mysqli_error($conn);
-        $msg_type = "error";
-    }
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
 }
 
-// Fetch Doctors for the dropdown
-$doc_sql = "SELECT * FROM doctors";
-$doc_result = mysqli_query($conn, $doc_sql);
+$msg = "";
+$patient_id = $_SESSION['user_id'];
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $doctor_id = $_POST['doctor_id'];
+    $date = $_POST['date'];
+    $time = $_POST['time'];
+    $reason = mysqli_real_escape_string($conn, $_POST['message']);
+    $full_time = date('Y-m-d H:i:s', strtotime("$date $time"));
+
+    // FIXED QUERY: Removed 'patient_name'. Only inserting 'patient_id'.
+    $sql = "INSERT INTO appointments (doctor_id, patient_id, appointment_time, reason, status) 
+            VALUES ('$doctor_id', '$patient_id', '$full_time', '$reason', 'Scheduled')";
+
+    if (mysqli_query($conn, $sql)) {
+        $msg = "<div style='background:#dbeafe; color:#1e40af; padding:15px; border-radius:8px; margin-bottom:20px; border: 1px solid #bfdbfe; display:flex; align-items:center; gap:10px;'>
+                    <i class='fas fa-check-circle'></i> 
+                    <div><strong>Success!</strong> Request sent. Waiting for Doctor to accept.</div>
+                </div>";
+    } else {
+        $msg = "<div style='background:#fee2e2; color:#b91c1c; padding:15px; border-radius:8px; margin-bottom:20px;'>Error: " . mysqli_error($conn) . "</div>";
+    }
+}
 ?>
 
-<style>
-    /* Page Header */
-    .page-header {
-        background: linear-gradient(135deg, #f8f9fa 0%, #eef2ff 100%);
-        padding: 60px 0;
-        text-align: center;
-        margin-bottom: 50px;
-    }
+<!DOCTYPE html>
+<html lang="en">
 
-    .page-header h1 {
-        font-size: 42px;
-        color: #0c5adb;
-        font-weight: 800;
-    }
-
-    .page-header p {
-        color: #6b7280;
-        font-size: 18px;
-    }
-
-    /* Main Container */
-    .booking-wrapper {
-        max-width: 1100px;
-        margin: 0 auto 80px auto;
-        padding: 0 20px;
-        display: grid;
-        grid-template-columns: 1.5fr 1fr;
-        gap: 0;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-        border-radius: 20px;
-        overflow: hidden;
-        background: white;
-    }
-
-    /* Form Section */
-    .booking-form {
-        padding: 50px;
-    }
-
-    .form-title {
-        font-size: 24px;
-        color: #1f2937;
-        margin-bottom: 30px;
-        font-weight: 700;
-        border-left: 5px solid #0c5adb;
-        padding-left: 15px;
-    }
-
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-    .form-group label {
-        display: block;
-        color: #1f2937;
-        margin-bottom: 8px;
-        font-weight: 500;
-        font-size: 14px;
-    }
-
-    .form-control {
-        width: 100%;
-        padding: 12px 15px;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        font-size: 15px;
-        outline: none;
-        transition: 0.3s;
-        background: #f9fafb;
-    }
-
-    .form-control:focus {
-        border-color: #0c5adb;
-        background: white;
-        box-shadow: 0 0 0 4px rgba(12, 90, 219, 0.05);
-    }
-
-    .row-inputs {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-
-    textarea.form-control {
-        resize: none;
-        height: 100px;
-    }
-
-    .btn-submit {
-        width: 100%;
-        padding: 15px;
-        background: #0c5adb;
-        color: white;
-        border: none;
-        border-radius: 50px;
-        font-size: 16px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: 0.3s;
-        margin-top: 10px;
-    }
-
-    .btn-submit:hover {
-        background: #0946a8;
-        transform: translateY(-2px);
-    }
-
-    /* Info Section (Right Side) */
-    .booking-info {
-        background: #0c5adb;
-        color: white;
-        padding: 50px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        position: relative;
-        overflow: hidden;
-    }
-
-    /* Decorative Circles */
-    .booking-info::before {
-        content: '';
-        position: absolute;
-        top: -50px;
-        right: -50px;
-        width: 200px;
-        height: 200px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-    }
-
-    .booking-info::after {
-        content: '';
-        position: absolute;
-        bottom: -50px;
-        left: -50px;
-        width: 150px;
-        height: 150px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-    }
-
-    .info-item {
-        margin-bottom: 30px;
-        position: relative;
-        z-index: 1;
-    }
-
-    .info-item i {
-        font-size: 24px;
-        margin-bottom: 15px;
-        display: block;
-        opacity: 0.8;
-    }
-
-    .info-item h3 {
-        font-size: 20px;
-        margin-bottom: 10px;
-    }
-
-    .info-item p {
-        opacity: 0.8;
-        font-size: 15px;
-        line-height: 1.6;
-    }
-
-    /* Alerts */
-    .alert {
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        font-size: 14px;
-        font-weight: 500;
-    }
-
-    .alert-success {
-        background: #dcfce7;
-        color: #16a34a;
-        border: 1px solid #bbf7d0;
-    }
-
-    .alert-error {
-        background: #fee2e2;
-        color: #b91c1c;
-        border: 1px solid #fecaca;
-    }
-
-    /* Responsive */
-    @media (max-width: 900px) {
-        .booking-wrapper {
-            grid-template-columns: 1fr;
+<head>
+    <meta charset="UTF-8">
+    <title>Book Appointment | Medicare+</title>
+    <link rel="icon" href="images/Favicon.png" type="image/png">
+    <script src="https://kit.fontawesome.com/9e166a3863.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- BLUE THEME STYLING --- */
+        :root {
+            --primary-color: #0c5adb;
+            --primary-dark: #0946a8;
+            --bg-color: #f8f9fa;
         }
 
-        .row-inputs {
-            grid-template-columns: 1fr;
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-color);
+            margin: 0;
         }
-    }
-</style>
 
-<div class="page-header">
-    <h1>Book an Appointment</h1>
-    <p>Schedule a consultation with our expert doctors.</p>
-</div>
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(12, 90, 219, 0.1);
+        }
 
-<div class="booking-wrapper">
-    <div class="booking-form">
-        <h2 class="form-title">Appointment Details</h2>
-        <?php if ($message != ""): ?>
-            <div class="alert alert-<?php echo $msg_type; ?>">
-                <?php echo $message; ?>
-            </div>
-        <?php endif; ?>
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+            display: inline-block;
+            padding-bottom: 5px;
+            margin-top: 0;
+        }
 
-        <form method="POST">
-            <div class="row-inputs">
-                <div class="form-group">
-                    <label>Patient Name</label>
-                    <input type="text" name="name" class="form-control" placeholder="Full Name"
-                        value="<?php echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : ''; ?>" required>
-                </div>
-                <div class="form-group">
-                    <label>Phone Number</label>
-                    <input type="text" name="phone" class="form-control" placeholder="07x xxxxxxx" required>
-                </div>
-            </div>
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 25px;
+        }
 
-            <div class="row-inputs">
-                <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="email" name="email" class="form-control" placeholder="example@gmail.com" required>
-                </div>
-                <div class="form-group">
+        .full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-family: inherit;
+            background: #f8fafc;
+            transition: 0.3s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--primary-color);
+            background: white;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(12, 90, 219, 0.1);
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 30px;
+            width: 100%;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(12, 90, 219, 0.3);
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #888;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+
+<body>
+
+    <?php include 'header.php'; ?>
+
+    <div class="container">
+        <?php echo $msg; ?>
+
+        <h2>Book an Appointment</h2>
+        <p style="color:#666;">Fill in the form below to schedule a visit with our specialists.</p>
+
+        <form method="POST" action="">
+            <div class="form-grid">
+                <div class="full-width">
                     <label>Select Doctor</label>
-                    <select name="doctor" class="form-control" required>
-                        <option value="" disabled selected>Choose a Specialist</option>
+                    <select name="doctor_id" required>
+                        <option value="">-- Choose a Specialist --</option>
                         <?php
-                        if (mysqli_num_rows($doc_result) > 0) {
-                            while ($row = mysqli_fetch_assoc($doc_result)) {
-                                echo "<option value='" . $row['id'] . "'>" . $row['name'] . " (" . $row['specialty'] . ")</option>";
-                            }
+                        // Ensure we only fetch users who are actually doctors
+                        $doc_res = mysqli_query($conn, "SELECT id, full_name, specialty FROM users WHERE role='doctor'");
+                        while ($row = mysqli_fetch_assoc($doc_res)) {
+                            // Display Doctor Name and Specialty
+                            $specialty = !empty($row['specialty']) ? " (" . $row['specialty'] . ")" : "";
+                            echo "<option value='" . $row['id'] . "'>Dr. " . $row['full_name'] . $specialty . "</option>";
                         }
                         ?>
                     </select>
                 </div>
-            </div>
-
-            <div class="row-inputs">
-                <div class="form-group">
+                <div>
                     <label>Preferred Date</label>
-                    <input type="date" name="date" class="form-control" min="<?php echo date('Y-m-d'); ?>" required>
+                    <input type="date" name="date" required min="<?php echo date('Y-m-d'); ?>">
                 </div>
-                <div class="form-group">
+                <div>
                     <label>Preferred Time</label>
-                    <input type="time" name="time" class="form-control" required>
+                    <input type="time" name="time" required>
+                </div>
+                <div class="full-width">
+                    <label>Reason for Visit</label>
+                    <textarea name="message" rows="4" placeholder="Briefly describe your symptoms..." required></textarea>
                 </div>
             </div>
-
-            <div class="form-group">
-                <label>Reason for Visit</label>
-                <textarea name="reason" class="form-control" placeholder="Briefly describe your symptoms or reason for appointment..."></textarea>
-            </div>
-
-            <button type="submit" name="book_appointment" class="btn-submit">Confirm Appointment</button>
+            <button type="submit">Confirm Booking</button>
+            <a href="dashboard_patient.php" class="back-link">Cancel and Return</a>
         </form>
     </div>
 
-    <div class="booking-info">
-        <div class="info-item">
-            <i class="fas fa-phone-alt"></i>
-            <h3>Emergency Cases</h3>
-            <p>For immediate medical attention, please do not use this form. Call our emergency hotline immediately.</p>
-            <p style="font-size: 20px; font-weight: 700; margin-top: 10px;">1990 / +94 112 345 678</p>
-        </div>
-        <div class="info-item">
-            <i class="fas fa-clock"></i>
-            <h3>Working Hours</h3>
-            <p>Monday - Friday: 8:00 AM - 9:00 PM</p>
-            <p>Saturday: 9:00 AM - 5:00 PM</p>
-            <p>Sunday: Closed</p>
-        </div>
-        <div class="info-item">
-            <i class="fas fa-info-circle"></i>
-            <h3>Need Help?</h3>
-            <p>If you have trouble booking online, our front desk support team is available to assist you during working hours.</p>
-        </div>
-    </div>
-</div>
+    <?php include 'footer.php'; ?>
+</body>
 
-<?php include 'footer.php'; ?>
+</html>

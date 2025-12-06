@@ -1,75 +1,50 @@
 <?php
 session_start();
 include 'db_connect.php';
+date_default_timezone_set('Asia/Colombo');
 
-// Security Check
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
     header("Location: login.php");
     exit();
 }
 
-// --- 1. INIT DATA ---
 $doctor_id = $_SESSION['user_id'];
 $doctor_name = $_SESSION['username'];
 $display_name = trim(str_ireplace("Dr.", "", $doctor_name));
 
-// Time Greeting
-$h = date('H');
-$greeting = ($h < 12) ? "Good Morning" : (($h < 18) ? "Good Afternoon" : "Good Evening");
+// --- PHP ACTIONS ---
+if (isset($_POST['send_rx'])) {
+    $p_id = $_POST['rx_patient_id'];
+    $diag = mysqli_real_escape_string($conn, $_POST['diagnosis']);
+    $meds = mysqli_real_escape_string($conn, $_POST['medication']);
+    $sql = "INSERT INTO prescriptions (doctor_id, patient_id, diagnosis, medicine_list, dosage_instructions) VALUES ('$doctor_id', '$p_id', '$diag', 'General Rx', '$meds')";
+    mysqli_query($conn, $sql);
+}
 
-// --- 2. LOGIC: SEND INVOICE (With 2-Bill Limit from Repo) ---
 if (isset($_POST['send_bill'])) {
     $appt_val = $_POST['bill_appt_id'];
     list($appt_id, $pat_id) = explode('_', $appt_val);
     $service = mysqli_real_escape_string($conn, $_POST['service_desc']);
     $amount = $_POST['amount'];
 
-    // CHECK LIMIT: Max 2 Invoices per Appointment
-    $check_limit = mysqli_query($conn, "SELECT COUNT(*) as count FROM invoices WHERE appointment_id = '$appt_id'");
-    $limit_row = mysqli_fetch_assoc($check_limit);
-
-    if ($limit_row['count'] >= 2) {
-        echo "<script>alert('⚠️ Limit Reached: You can only send 2 invoices for this appointment.');</script>";
-    } else {
-        // Insert Invoice
-        $sql = "INSERT INTO invoices (patient_id, doctor_id, appointment_id, amount, service_name, status) 
-                VALUES ('$pat_id', '$doctor_id', '$appt_id', '$amount', '$service', 'unpaid')";
+    $check = mysqli_query($conn, "SELECT COUNT(*) as count FROM invoices WHERE appointment_id='$appt_id'");
+    if (mysqli_fetch_assoc($check)['count'] < 2) {
+        $sql = "INSERT INTO invoices (patient_id, doctor_id, appointment_id, amount, service_name, status) VALUES ('$pat_id', '$doctor_id', '$appt_id', '$amount', '$service', 'unpaid')";
         if (mysqli_query($conn, $sql)) {
-            echo "<script>alert('✅ Invoice Sent Successfully!');</script>";
+            echo "<script>alert('✅ Invoice sent!');</script>";
         }
+    } else {
+        echo "<script>alert('⚠️ Limit reached');</script>";
     }
 }
 
-// --- 3. LOGIC: SEND PRESCRIPTION ---
-if (isset($_POST['send_rx'])) {
-    $p_id = $_POST['rx_patient_id'];
-    $diag = mysqli_real_escape_string($conn, $_POST['diagnosis']);
-    $meds = mysqli_real_escape_string($conn, $_POST['medication']);
-    $sql = "INSERT INTO prescriptions (doctor_id, patient_id, diagnosis, medicine_list, dosage_instructions) 
-            VALUES ('$doctor_id', '$p_id', '$diag', 'General Rx', '$meds')";
-    if (mysqli_query($conn, $sql)) echo "<script>alert('✅ Prescription Sent!');</script>";
-}
+$my_patients = mysqli_query($conn, "SELECT DISTINCT u.id, u.full_name FROM users u JOIN appointments a ON u.id = a.patient_id WHERE a.doctor_id='$doctor_id'");
 
-// --- 4. STATS & EARNINGS (Logic from fetch_earnings.php) ---
-// Calculate Total Earnings (Sum of payments table)
-$earning_sql = "SELECT SUM(p.amount) as total_earned 
-                FROM payments p 
-                JOIN invoices i ON p.invoice_id = i.id 
-                WHERE i.doctor_id = '$doctor_id'";
-$earning_res = mysqli_query($conn, $earning_sql);
-$earning_row = mysqli_fetch_assoc($earning_res);
-$total_revenue = $earning_row['total_earned'] ? $earning_row['total_earned'] : 0;
-
-// Other Counts
-$count_pat = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(DISTINCT patient_id) as c FROM appointments WHERE doctor_id='$doctor_id'"))['c'];
-$count_done = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as c FROM appointments WHERE doctor_id='$doctor_id' AND status='Completed'"))['c'];
-$count_pend = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as c FROM appointments WHERE doctor_id='$doctor_id' AND status='Scheduled'"))['c'];
-
-// --- 5. FETCH DATA FOR TABLES ---
-$recent_payments = mysqli_query($conn, "SELECT p.*, u.full_name FROM payments p JOIN users u ON p.patient_id = u.id WHERE p.doctor_id='$doctor_id' ORDER BY p.paid_at DESC LIMIT 5");
-$incoming_appts = mysqli_query($conn, "SELECT a.*, u.full_name FROM appointments a JOIN users u ON a.patient_id = u.id WHERE a.doctor_id='$doctor_id' AND a.status IN ('Scheduled', 'Confirmed') ORDER BY a.appointment_time ASC");
-$patients = mysqli_query($conn, "SELECT DISTINCT u.id, u.full_name FROM users u JOIN appointments a ON u.id = a.patient_id WHERE a.doctor_id='$doctor_id'");
-$appts = mysqli_query($conn, "SELECT a.id, a.patient_id, u.full_name, a.appointment_time FROM appointments a JOIN users u ON a.patient_id = u.id WHERE a.doctor_id='$doctor_id' AND a.status='Confirmed'");
+// CORRECTED QUERY: Use JOIN to get patient name for the dropdown
+$confirmed_appts = mysqli_query($conn, "SELECT a.id, a.patient_id, a.appointment_time, u.full_name 
+                                        FROM appointments a 
+                                        JOIN users u ON a.patient_id = u.id 
+                                        WHERE a.doctor_id='$doctor_id' AND a.status='Confirmed'");
 ?>
 
 <!DOCTYPE html>
@@ -78,31 +53,24 @@ $appts = mysqli_query($conn, "SELECT a.id, a.patient_id, u.full_name, a.appointm
 <head>
     <title>Doctor Dashboard</title>
     <?php include 'header.php'; ?>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        /* ELEGANT THEME STYLES */
+        :root {
+            --primary-color: #0c5adb;
+            --bg-overlay: rgba(255, 255, 255, 0.9);
+        }
+
         body {
-            background: linear-gradient(rgba(248, 249, 250, 0.9), rgba(248, 249, 250, 0.9)), url('images/background3.png');
+            background: linear-gradient(var(--bg-overlay), var(--bg-overlay)), url('images/background3.png');
             background-size: cover;
             background-attachment: fixed;
+            font-family: 'Poppins', sans-serif;
         }
 
         .dash-container {
             max-width: 1200px;
             margin: 40px auto;
             padding: 0 20px;
-            animation: fadeIn 0.8s ease;
-        }
-
-        .welcome-banner {
-            background: linear-gradient(135deg, #0c5adb, #0946a8);
-            color: white;
-            padding: 40px;
-            border-radius: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(12, 90, 219, 0.2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
         .stats-grid {
@@ -114,52 +82,32 @@ $appts = mysqli_query($conn, "SELECT a.id, a.patient_id, u.full_name, a.appointm
 
         .stat-card {
             background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
         }
 
         .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
+            width: 50px;
+            height: 50px;
+            background: #e0f2fe;
+            color: #0c5adb;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 20px;
         }
-
-        .icon-blue {
-            background: #e0f2fe;
-            color: #0284c7;
-        }
-
-        .icon-green {
-            background: #dcfce7;
-            color: #16a34a;
-        }
-
-        .icon-orange {
-            background: #ffedd5;
-            color: #ea580c;
-        }
-
-        .icon-gold {
-            background: #fef9c3;
-            color: #ca8a04;
-        }
-
-        /* Gold for Earnings */
 
         .content-box {
             background: white;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            border-radius: 15px;
             margin-bottom: 30px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
         }
 
         .forms-row {
@@ -168,95 +116,101 @@ $appts = mysqli_query($conn, "SELECT a.id, a.patient_id, u.full_name, a.appointm
             gap: 30px;
         }
 
-        /* Form Elements */
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: #6b7280;
-            margin-bottom: 5px;
-        }
-
         .form-control {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            background: #f9fafb;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
         }
 
         .btn-action {
             width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            border: none;
+            padding: 10px;
+            background: #0c5adb;
             color: white;
-            font-weight: 600;
+            border: none;
+            border-radius: 6px;
             cursor: pointer;
         }
 
-        .btn-blue {
-            background: #0c5adb;
-        }
-
-        .btn-green {
-            background: #16a34a;
-        }
-
-        /* Table */
         table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 10px;
+            border-collapse: collapse;
+            margin-top: 10px;
         }
 
         th {
             text-align: left;
-            padding: 15px;
-            color: #6b7280;
-            font-size: 14px;
+            padding: 10px;
+            color: #888;
+            font-size: 13px;
+            border-bottom: 2px solid #f5f5f5;
         }
 
         td {
-            background: #f9fafb;
-            padding: 15px;
-            border-top: 1px solid #f3f4f6;
-            border-bottom: 1px solid #f3f4f6;
+            padding: 12px 10px;
+            border-bottom: 1px solid #f5f5f5;
+            font-size: 14px;
         }
 
-        tr td:first-child {
-            border-top-left-radius: 10px;
-            border-bottom-left-radius: 10px;
-            border-left: 1px solid #f3f4f6;
-        }
-
-        tr td:last-child {
-            border-top-right-radius: 10px;
-            border-bottom-right-radius: 10px;
-            border-right: 1px solid #f3f4f6;
-        }
-
-        .badge {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
+        /* Status Badges */
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 11px;
             font-weight: 600;
+            text-transform: uppercase;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
+        .st-Confirmed {
+            background: #e3f2fd;
+            color: #0062cc;
+        }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* Blue */
+        .st-Pending {
+            background: #fff3e0;
+            color: #ff9800;
+        }
+
+        /* Orange */
+        .st-Completed {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        /* Green */
+        .st-Scheduled {
+            background: #fff3e0;
+            color: #ff9800;
+        }
+
+        /* Orange */
+
+        .btn-icon {
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .btn-accept {
+            background: #16a34a;
+            color: white;
+        }
+
+        .btn-check {
+            background: #0c5adb;
+            color: white;
+        }
+
+        .btn-trash {
+            background: #ffebee;
+            color: #c62828;
         }
     </style>
 </head>
@@ -264,113 +218,209 @@ $appts = mysqli_query($conn, "SELECT a.id, a.patient_id, u.full_name, a.appointm
 <body>
 
     <div class="dash-container">
-        <div class="welcome-banner">
-            <div>
-                <h1>Dr. <?php echo htmlspecialchars($display_name); ?></h1>
-                <p><?php echo $greeting; ?>. Here is your practice overview.</p>
-            </div>
-            <div style="background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 30px;"><i class="fas fa-calendar"></i> <?php echo date('F d, Y'); ?></div>
+        <div style="background: #0c5adb; color: white; padding: 30px; border-radius: 15px; margin-bottom: 30px;">
+            <h1>Dr. <?= htmlspecialchars($display_name) ?></h1>
+            <p>Live Dashboard Overview</p>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon icon-blue"><i class="fas fa-users"></i></div>
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
                 <div>
-                    <h3><?php echo $count_pat; ?></h3>
-                    <p>Total Patients</p>
+                    <h3 id="cnt-total">0</h3>
+                    <p>Patients</p>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon icon-green"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
                 <div>
-                    <h3><?php echo $count_done; ?></h3>
+                    <h3 id="cnt-completed">0</h3>
                     <p>Completed</p>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon icon-orange"><i class="fas fa-clock"></i></div>
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
                 <div>
-                    <h3><?php echo $count_pend; ?></h3>
+                    <h3 id="cnt-pending">0</h3>
                     <p>Pending</p>
                 </div>
             </div>
-            <div class="stat-card" style="border-left: 4px solid #ca8a04;">
-                <div class="stat-icon icon-gold"><i class="fas fa-coins"></i></div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-wallet"></i></div>
                 <div>
-                    <h3>LKR <?php echo number_format($total_revenue, 2); ?></h3>
-                    <p>Total Earnings</p>
+                    <h3>LKR <span id="live-revenue">0.00</span></h3>
+                    <p>Earnings</p>
                 </div>
             </div>
         </div>
 
         <div class="forms-row">
             <div class="content-box">
-                <h3 style="color: #0c5adb; margin-top:0;"><i class="fas fa-prescription-bottle-alt"></i> Write Prescription</h3>
+                <h3>Write Prescription</h3>
                 <form method="POST">
-                    <div class="form-group"><label>Patient</label><select name="rx_patient_id" class="form-control" required>
-                            <option value="">Select...</option><?php mysqli_data_seek($patients, 0);
-                                                                while ($p = mysqli_fetch_assoc($patients)): ?><option value="<?= $p['id'] ?>"><?= $p['full_name'] ?></option><?php endwhile; ?>
-                        </select></div>
-                    <div class="form-group"><label>Diagnosis</label><input type="text" name="diagnosis" class="form-control" required></div>
-                    <div class="form-group"><label>Medication</label><textarea name="medication" class="form-control" style="height:80px;" required></textarea></div>
-                    <button type="submit" name="send_rx" class="btn-action btn-blue">Send Rx</button>
+                    <select name="rx_patient_id" class="form-control" required>
+                        <option value="">Select Patient...</option>
+                        <?php mysqli_data_seek($my_patients, 0);
+                        while ($p = mysqli_fetch_assoc($my_patients)): ?>
+                            <option value="<?= $p['id'] ?>"><?= $p['full_name'] ?></option>
+                        <?php endwhile; ?>
+                    </select>
+                    <input type="text" name="diagnosis" class="form-control" placeholder="Diagnosis" required>
+                    <textarea name="medication" class="form-control" placeholder="Medication Details..." required></textarea>
+                    <button type="submit" name="send_rx" class="btn-action">Send Rx</button>
                 </form>
             </div>
+
             <div class="content-box">
-                <h3 style="color: #16a34a; margin-top:0;"><i class="fas fa-file-invoice-dollar"></i> Send Invoice</h3>
+                <h3>Send Invoice</h3>
+                <p style="font-size:12px; color:#666;">Note: You must 'Accept' an appointment below before you can bill it.</p>
                 <form method="POST">
-                    <div class="form-group"><label>Confirmed Appointment</label><select name="bill_appt_id" class="form-control" required>
-                            <option value="">Select...</option><?php mysqli_data_seek($appts, 0);
-                                                                while ($a = mysqli_fetch_assoc($appts)): ?><option value="<?= $a['id'] . '_' . $a['patient_id'] ?>"><?= $a['full_name'] ?> (<?= $a['appointment_time'] ?>)</option><?php endwhile; ?>
-                        </select></div>
-                    <div class="form-group"><label>Service Description</label><input type="text" name="service_desc" class="form-control" required></div>
-                    <div class="form-group"><label>Amount (LKR)</label><input type="number" name="amount" class="form-control" step="0.01" required></div>
-                    <button type="submit" name="send_bill" class="btn-action btn-green">Send Bill</button>
+                    <select name="bill_appt_id" class="form-control" required>
+                        <option value="" disabled selected>Select Confirmed Appointment...</option>
+                        <?php if (mysqli_num_rows($confirmed_appts) > 0): ?>
+                            <?php mysqli_data_seek($confirmed_appts, 0);
+                            while ($a = mysqli_fetch_assoc($confirmed_appts)): ?>
+                                <option value="<?= $a['id'] . '_' . $a['patient_id'] ?>"><?= $a['full_name'] ?> (<?= $a['appointment_time'] ?>)</option>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <option disabled>No confirmed appointments</option>
+                        <?php endif; ?>
+                    </select>
+                    <input type="text" name="service_desc" class="form-control" placeholder="Service (e.g. Checkup)" required>
+                    <input type="number" name="amount" class="form-control" placeholder="Amount (LKR)" required>
+                    <button type="submit" name="send_bill" class="btn-action">Send Bill</button>
                 </form>
             </div>
         </div>
 
-        <div class="content-box" style="border-top: 4px solid #16a34a;">
-            <h3 style="margin-top:0; color:#333;">Recent Received Payments</h3>
+        <div class="content-box">
+            <h3>Incoming Appointments</h3>
             <table>
-                <tr>
-                    <th>Date</th>
-                    <th>Patient</th>
-                    <th>Method</th>
-                    <th>Amount</th>
-                </tr>
-                <?php while ($pay = mysqli_fetch_assoc($recent_payments)): ?>
+                <thead>
                     <tr>
-                        <td><?= date('M d, Y', strtotime($pay['paid_at'])) ?></td>
-                        <td style="font-weight:600;"><?= $pay['full_name'] ?></td>
-                        <td><?= $pay['payment_method'] ?? 'Online' ?></td>
-                        <td style="color:#16a34a; font-weight:bold;">+ LKR <?= number_format($pay['amount'], 2) ?></td>
+                        <th>Time</th>
+                        <th>Patient</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Action</th>
                     </tr>
-                <?php endwhile; ?>
+                </thead>
+                <tbody id="upcomingTableBody">
+                    <tr>
+                        <td colspan="5">Loading...</td>
+                    </tr>
+                </tbody>
             </table>
         </div>
 
         <div class="content-box">
-            <h3 style="margin-top:0; color:#333;">Incoming Appointments</h3>
+            <h3>History (Completed)</h3>
             <table>
-                <tr>
-                    <th>Time</th>
-                    <th>Patient</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                </tr>
-                <?php while ($row = mysqli_fetch_assoc($incoming_appts)): ?>
+                <thead>
                     <tr>
-                        <td><?= date('M d, h:i A', strtotime($row['appointment_time'])) ?></td>
-                        <td><?= $row['full_name'] ?></td>
-                        <td><?= $row['reason'] ?></td>
-                        <td><span class="badge" style="background:#e0f2fe; color:#0284c7;"><?= $row['status'] ?></span></td>
+                        <th>Time</th>
+                        <th>Patient</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Action</th>
                     </tr>
-                <?php endwhile; ?>
+                </thead>
+                <tbody id="historyTableBody"></tbody>
             </table>
         </div>
     </div>
-    <?php include 'footer.php'; ?>
+
+    <script>
+        $(document).ready(function() {
+            fetchAppointments();
+            fetchStats();
+            setInterval(fetchAppointments, 3000);
+            setInterval(fetchStats, 3000);
+        });
+
+        function fetchStats() {
+            $.getJSON('fetch_earnings.php', function(data) {
+                $('#live-revenue').text(data.revenue);
+                $('#cnt-total').text(data.total);
+                $('#cnt-completed').text(data.completed);
+                $('#cnt-pending').text(data.pending);
+            });
+        }
+
+        function fetchAppointments() {
+            $.post('doctor_api.php', {
+                action: 'fetch'
+            }, function(data) {
+                let upcomingRows = '',
+                    historyRows = '';
+
+                if (data.length === 0) {
+                    upcomingRows = '<tr><td colspan="5" style="padding:20px; text-align:center; color:#999;">No appointments found.</td></tr>';
+                } else {
+                    data.forEach(function(appt) {
+                        let status = appt.status.trim().toLowerCase();
+                        let displayTime = appt.formatted_time;
+
+                        if (status === 'completed') {
+                            historyRows += `<tr>
+                            <td>${displayTime}</td>
+                            <td>${appt.patient_name}</td>
+                            <td>${appt.reason}</td>
+                            <td><span class="status-badge st-Completed">Completed</span></td>
+                            <td><button class="btn-icon btn-trash" onclick="deleteAppt(${appt.id})"><i class="fas fa-trash"></i></button></td>
+                        </tr>`;
+                        } else {
+                            let buttons = '';
+                            let badgeClass = (status === 'confirmed') ? 'st-Confirmed' : 'st-Pending';
+
+                            // FORCE BUTTONS: If not Confirmed, show Accept. If Confirmed, show Complete.
+                            if (status === 'confirmed') {
+                                buttons = `<button class="btn-icon btn-check" onclick="updateAppt(${appt.id}, 'Completed')"><i class="fas fa-check-double"></i> Complete</button>`;
+                            } else {
+                                buttons = `<button class="btn-icon btn-accept" onclick="updateAppt(${appt.id}, 'Confirmed')"><i class="fas fa-check"></i> Accept</button>
+                                       <button class="btn-icon btn-trash" onclick="deleteAppt(${appt.id})"><i class="fas fa-trash"></i></button>`;
+                            }
+
+                            upcomingRows += `<tr>
+                            <td>${displayTime}</td>
+                            <td>${appt.patient_name}</td>
+                            <td>${appt.reason}</td>
+                            <td><span class="status-badge ${badgeClass}">${appt.status}</span></td>
+                            <td>${buttons}</td>
+                        </tr>`;
+                        }
+                    });
+                }
+                $('#upcomingTableBody').html(upcomingRows);
+                $('#historyTableBody').html(historyRows);
+            }, 'json');
+        }
+
+        function updateAppt(id, status) {
+            $.post('doctor_api.php', {
+                action: 'update',
+                id: id,
+                status: status
+            }, function() {
+                fetchAppointments();
+                if (status === 'Confirmed') setTimeout(function() {
+                    location.reload();
+                }, 500);
+            });
+        }
+
+        function deleteAppt(id) {
+            if (confirm('Delete this appointment?')) {
+                $.post('doctor_api.php', {
+                    action: 'delete',
+                    id: id
+                }, function() {
+                    fetchAppointments();
+                });
+            }
+        }
+    </script>
+
 </body>
 
 </html>

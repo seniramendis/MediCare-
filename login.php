@@ -7,49 +7,62 @@ $email_input = "";
 
 if (isset($_POST['login'])) {
     $email = mysqli_real_escape_string($conn, $_POST['email']);
-    $password = $_POST['password']; // Do not escape password before verifying
+    $password = $_POST['password'];
     $login_type = $_POST['login_type'];
     $email_input = $email;
 
+    // ==========================================
+    // OPTION 1: PATIENT LOGIN
+    // ==========================================
     if ($login_type === 'patient') {
-        // --- PATIENT LOGIN ---
+        // Search in the 'users' table
         $sql = "SELECT * FROM users WHERE email='$email'";
         $result = mysqli_query($conn, $sql);
 
         if ($result && mysqli_num_rows($result) > 0) {
             $row = mysqli_fetch_assoc($result);
 
-            // Check: Plain Text OR Hash
-            if ($password == $row['password'] || password_verify($password, $row['password'])) {
-                $_SESSION['user_id'] = $row['id'];
-                $_SESSION['username'] = $row['full_name'];
-                $_SESSION['role'] = 'patient';
-                header("Location: dashboard_patient.php");
-                exit();
+            // Verify Password
+            $check_password = ($password === $row['password']) || password_verify($password, $row['password']);
+
+            if ($check_password) {
+                // Verify correct role (Prevent doctors from logging in as patients if they are in this table too)
+                if (isset($row['role']) && $row['role'] !== 'patient') {
+                    $error = "Access Denied. This email belongs to a Doctor.";
+                } else {
+                    // Login Success
+                    $_SESSION['user_id'] = $row['id'];
+                    $_SESSION['username'] = $row['full_name']; // Assuming 'users' has full_name
+                    $_SESSION['role'] = 'patient';
+                    header("Location: dashboard_patient.php");
+                    exit();
+                }
             } else {
                 $error = "Correct Email, but <b>Wrong Password</b>.";
             }
         } else {
-            // Check if they are actually a doctor trying to login as patient
-            $check_doc = mysqli_query($conn, "SELECT * FROM doctors WHERE email='$email'");
-            if (mysqli_num_rows($check_doc) > 0) {
-                $error = "This email belongs to a Doctor! <br><b>Please click 'Login here as Doctor' below.</b>";
-            } else {
-                $error = "No Patient account found with this email.";
-            }
+            $error = "No Patient account found with this email.";
         }
-    } elseif ($login_type === 'doctor') {
-        // --- DOCTOR LOGIN ---
+    }
+
+    // ==========================================
+    // OPTION 2: DOCTOR LOGIN
+    // ==========================================
+    elseif ($login_type === 'doctor') {
+        // Search in the 'doctors' table (Matches your Screenshot)
         $sql = "SELECT * FROM doctors WHERE email='$email'";
         $result = mysqli_query($conn, $sql);
 
         if ($result && mysqli_num_rows($result) > 0) {
             $row = mysqli_fetch_assoc($result);
 
-            // Check: Plain Text OR Hash (Fixes the kavinga123 issue)
-            if ($password == $row['password'] || password_verify($password, $row['password'])) {
+            // Verify Password
+            $check_password = ($password === $row['password']) || password_verify($password, $row['password']);
+
+            if ($check_password) {
+                // Login Success
                 $_SESSION['user_id'] = $row['id'];
-                $_SESSION['username'] = $row['name'];
+                $_SESSION['username'] = $row['name']; // 'doctors' table uses 'name'
                 $_SESSION['role'] = 'doctor';
                 header("Location: dashboard_doctor.php");
                 exit();
@@ -69,7 +82,7 @@ if (isset($_POST['login'])) {
 <head>
     <meta charset="UTF-8">
     <title>Login | MediCare+</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230c5adb%22/><path fill=%22%23ffffff%22 d=%22M35 20h30v25h25v30h-25v25h-30v-25h-25v-30h25z%22/></svg>">
+    <link rel="icon" href="images/Favicon.png" type="image/png">
     <script src="https://kit.fontawesome.com/9e166a3863.js" crossorigin="anonymous"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -91,6 +104,8 @@ if (isset($_POST['login'])) {
 
         body {
             background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url('images/background3.png');
+            background-repeat: no-repeat;
+            background-position: center center;
             background-size: cover;
             min-height: 100vh;
             display: flex;
@@ -128,6 +143,7 @@ if (isset($_POST['login'])) {
             margin-bottom: 30px;
             font-weight: 600;
             font-size: 24px;
+            transition: 0.3s;
         }
 
         .header-doctor {
@@ -170,12 +186,14 @@ if (isset($_POST['login'])) {
             border-radius: 50px;
             font-size: 14px;
             outline: none;
+            transition: 0.3s;
             background: #f9fafb;
         }
 
         input:focus {
             border-color: var(--primary-color);
             background: white;
+            box-shadow: 0 0 0 4px rgba(12, 90, 219, 0.1);
         }
 
         .btn-login {
@@ -188,7 +206,9 @@ if (isset($_POST['login'])) {
             font-weight: 600;
             font-size: 16px;
             cursor: pointer;
+            transition: 0.3s;
             margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(12, 90, 219, 0.3);
         }
 
         .btn-login:hover {
@@ -257,6 +277,7 @@ if (isset($_POST['login'])) {
 
         <form method="POST">
             <input type="hidden" name="login_type" id="loginType" value="patient">
+
             <div class="form-group">
                 <label>Email Address</label>
                 <div class="input-box">
@@ -277,9 +298,11 @@ if (isset($_POST['login'])) {
         <div class="footer-links">
             <span id="registerLinkText">Don't have an account? <a href="register.php">Register Patient</a></span>
             <br>
+
             <div class="divider"><span>OR</span></div>
             <p id="toggleText">Are you a doctor?</p>
             <a class="doctor-toggle" onclick="toggleLoginMode()">Login here as Doctor</a>
+
             <br><br>
             <a href="Home.php" style="color: var(--text-light); font-weight: normal;"><i class="fas fa-arrow-left"></i> Back to Home</a>
         </div>
@@ -295,24 +318,29 @@ if (isset($_POST['login'])) {
             const registerText = document.getElementById('registerLinkText');
 
             if (typeInput.value === 'patient') {
+                // Switch to Doctor Mode
                 typeInput.value = 'doctor';
                 title.innerText = 'Doctor Login';
                 title.classList.add('header-doctor');
                 btn.classList.add('btn-doctor');
+
                 toggleText.innerText = 'Are you a patient?';
                 toggleLink.innerText = 'Login here as Patient';
                 registerText.style.display = 'none';
             } else {
+                // Switch back to Patient Mode
                 typeInput.value = 'patient';
                 title.innerText = 'Patient Login';
                 title.classList.remove('header-doctor');
                 btn.classList.remove('btn-doctor');
+
                 toggleText.innerText = 'Are you a doctor?';
                 toggleLink.innerText = 'Login here as Doctor';
                 registerText.style.display = 'inline';
             }
         }
     </script>
+
 </body>
 
 </html>
