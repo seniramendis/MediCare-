@@ -1,13 +1,13 @@
 <?php
-// fix_db.php
+
 include 'db_connect.php';
 
 echo "<h2>🛠️ Fixing Database Structure...</h2>";
 
-// 1. Check for 'patient_name' column
+
 $check = mysqli_query($conn, "SHOW COLUMNS FROM appointments LIKE 'patient_name'");
 if (mysqli_num_rows($check) == 0) {
-    // It's missing, so we add it
+
     $sql = "ALTER TABLE appointments ADD COLUMN patient_name VARCHAR(255) AFTER patient_id";
     if (mysqli_query($conn, $sql)) {
         echo "<h3 style='color:green'>✅ SUCCESS: Added 'patient_name' column.</h3>";
@@ -18,8 +18,7 @@ if (mysqli_num_rows($check) == 0) {
     echo "<h3 style='color:blue'>ℹ️ Column 'patient_name' already exists. Good.</h3>";
 }
 
-// 2. Sync existing names
-// This fills the new empty column with names from the users table
+
 $update = "UPDATE appointments a 
            JOIN users u ON a.patient_id = u.id 
            SET a.patient_name = u.full_name 

@@ -3,7 +3,7 @@ $page_title = "Contact";
 include 'header.php';
 include 'db_connect.php';
 
-// --- HANDLE FORM SUBMISSION ---
+
 $msg_alert = "";
 if (isset($_POST['send_message'])) {
     $name = mysqli_real_escape_string($conn, $_POST['name']);
@@ -22,7 +22,6 @@ if (isset($_POST['send_message'])) {
 ?>
 
 <style>
-    /* PAGE HEADER */
     .page-header {
         background: linear-gradient(135deg, #f8f9fa 0%, #eef2ff 100%);
         padding: 80px 0;
@@ -44,18 +43,18 @@ if (isset($_POST['send_message'])) {
         margin: 0 auto;
     }
 
-    /* LAYOUT CONTAINER */
+
     .contact-container {
         max-width: 1200px;
         margin: 0 auto 100px auto;
         padding: 0 20px;
         display: grid;
         grid-template-columns: 1fr 1.5fr;
-        /* Info takes less space, Form takes more */
+
         gap: 50px;
     }
 
-    /* LEFT SIDE: INFO CARDS */
+
     .info-wrapper {
         display: flex;
         flex-direction: column;
@@ -105,7 +104,7 @@ if (isset($_POST['send_message'])) {
         line-height: 1.6;
     }
 
-    /* RIGHT SIDE: FORM */
+
     .form-wrapper {
         background: white;
         padding: 50px;
@@ -175,7 +174,7 @@ if (isset($_POST['send_message'])) {
         transform: translateY(-3px);
     }
 
-    /* ALERTS */
+
     .alert-success {
         background: #dcfce7;
         color: #16a34a;
@@ -196,7 +195,7 @@ if (isset($_POST['send_message'])) {
         font-weight: 500;
     }
 
-    /* RESPONSIVE */
+
     @media (max-width: 900px) {
         .contact-container {
             grid-template-columns: 1fr;

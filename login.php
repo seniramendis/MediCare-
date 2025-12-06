@@ -11,28 +11,26 @@ if (isset($_POST['login'])) {
     $login_type = $_POST['login_type'];
     $email_input = $email;
 
-    // ==========================================
-    // OPTION 1: PATIENT LOGIN
-    // ==========================================
+
     if ($login_type === 'patient') {
-        // Search in the 'users' table
+
         $sql = "SELECT * FROM users WHERE email='$email'";
         $result = mysqli_query($conn, $sql);
 
         if ($result && mysqli_num_rows($result) > 0) {
             $row = mysqli_fetch_assoc($result);
 
-            // Verify Password
+
             $check_password = ($password === $row['password']) || password_verify($password, $row['password']);
 
             if ($check_password) {
-                // Verify correct role (Prevent doctors from logging in as patients if they are in this table too)
+
                 if (isset($row['role']) && $row['role'] !== 'patient') {
                     $error = "Access Denied. This email belongs to a Doctor.";
                 } else {
-                    // Login Success
+
                     $_SESSION['user_id'] = $row['id'];
-                    $_SESSION['username'] = $row['full_name']; // Assuming 'users' has full_name
+                    $_SESSION['username'] = $row['full_name'];
                     $_SESSION['role'] = 'patient';
                     header("Location: dashboard_patient.php");
                     exit();
@@ -43,26 +41,21 @@ if (isset($_POST['login'])) {
         } else {
             $error = "No Patient account found with this email.";
         }
-    }
+    } elseif ($login_type === 'doctor') {
 
-    // ==========================================
-    // OPTION 2: DOCTOR LOGIN
-    // ==========================================
-    elseif ($login_type === 'doctor') {
-        // Search in the 'doctors' table (Matches your Screenshot)
         $sql = "SELECT * FROM doctors WHERE email='$email'";
         $result = mysqli_query($conn, $sql);
 
         if ($result && mysqli_num_rows($result) > 0) {
             $row = mysqli_fetch_assoc($result);
 
-            // Verify Password
+
             $check_password = ($password === $row['password']) || password_verify($password, $row['password']);
 
             if ($check_password) {
-                // Login Success
+
                 $_SESSION['user_id'] = $row['id'];
-                $_SESSION['username'] = $row['name']; // 'doctors' table uses 'name'
+                $_SESSION['username'] = $row['name'];
                 $_SESSION['role'] = 'doctor';
                 header("Location: dashboard_doctor.php");
                 exit();
@@ -318,7 +311,7 @@ if (isset($_POST['login'])) {
             const registerText = document.getElementById('registerLinkText');
 
             if (typeInput.value === 'patient') {
-                // Switch to Doctor Mode
+
                 typeInput.value = 'doctor';
                 title.innerText = 'Doctor Login';
                 title.classList.add('header-doctor');
@@ -328,7 +321,7 @@ if (isset($_POST['login'])) {
                 toggleLink.innerText = 'Login here as Patient';
                 registerText.style.display = 'none';
             } else {
-                // Switch back to Patient Mode
+
                 typeInput.value = 'patient';
                 title.innerText = 'Patient Login';
                 title.classList.remove('header-doctor');

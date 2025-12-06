@@ -1,15 +1,14 @@
 <?php
 $page_title = "Doctors";
 include 'header.php';
-include 'db_connect.php'; // Ensure database connection is active
+include 'db_connect.php';
 
-// --- FETCH DOCTORS FROM DATABASE ---
+
 $sql = "SELECT * FROM doctors";
 $result = mysqli_query($conn, $sql);
 ?>
 
 <style>
-    /* Page Header */
     .page-header {
         background: linear-gradient(135deg, #f8f9fa 0%, #eef2ff 100%);
         padding: 60px 0;
@@ -29,7 +28,7 @@ $result = mysqli_query($conn, $sql);
         font-size: 18px;
     }
 
-    /* Grid Layout */
+
     .doctors-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -39,7 +38,7 @@ $result = mysqli_query($conn, $sql);
         padding: 0 20px;
     }
 
-    /* Card Styling */
+
     .doc-card {
         background: var(--white);
         padding: 30px 20px;
@@ -88,7 +87,7 @@ $result = mysqli_query($conn, $sql);
         display: inline-block;
     }
 
-    /* Buttons Container */
+
     .card-btns {
         display: flex;
         gap: 10px;
@@ -108,7 +107,7 @@ $result = mysqli_query($conn, $sql);
         text-align: center;
     }
 
-    /* Primary Button (Book) */
+
     .btn-book {
         background: var(--primary-color);
         color: white;
@@ -120,7 +119,7 @@ $result = mysqli_query($conn, $sql);
         transform: translateY(-2px);
     }
 
-    /* Secondary Button (Profile) */
+
     .btn-profile {
         background: transparent;
         border-color: var(--primary-color);

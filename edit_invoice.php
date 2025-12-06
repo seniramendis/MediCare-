@@ -2,7 +2,7 @@
 session_start();
 include 'db_connect.php';
 
-// Check if doctor
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
     header("Location: login.php");
     exit();
@@ -11,14 +11,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
 $id = $_GET['id'] ?? '';
 $row = [];
 
-// Fetch current data
+
 if ($id) {
     $sql = "SELECT * FROM invoices WHERE id='$id'";
     $result = mysqli_query($conn, $sql);
     $row = mysqli_fetch_assoc($result);
 }
 
-// UPDATE LOGIC (From your snippet)
+
 if (isset($_POST['update_btn'])) {
     $id = $_POST['id'];
     $service = $_POST['service'];

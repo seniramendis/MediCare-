@@ -1,6 +1,6 @@
 <?php
 $page_title = "Register";
-// Include header (handles Session, DB connection, and Global CSS)
+
 include 'header.php';
 
 $error = "";
@@ -8,7 +8,7 @@ $success = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    // 1. Collect & Sanitize Input
+
     $full_name = mysqli_real_escape_string($conn, $_POST['name']);
     $email     = mysqli_real_escape_string($conn, $_POST['email']);
     $phone     = mysqli_real_escape_string($conn, $_POST['phone']);
@@ -19,10 +19,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password  = $_POST['password'];
     $confirm_p = $_POST['confirm_password'];
 
-    // Default Role
+
     $role      = 'patient';
 
-    // 2. Validation Checks
+
     $check_email = mysqli_query($conn, "SELECT id FROM users WHERE email='$email'");
 
     if (mysqli_num_rows($check_email) > 0) {
@@ -30,7 +30,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } elseif ($password !== $confirm_p) {
         $error = "Passwords do not match!";
     } else {
-        // 3. Secure Hash & Insert
+
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
         $sql = "INSERT INTO users (full_name, email, phone, dob, gender, address, password, role) 
@@ -47,7 +47,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 ?>
 
 <style>
-    /* Page Specific Styles */
     .register-wrapper {
         display: flex;
         justify-content: center;
@@ -81,7 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         text-align: center;
     }
 
-    /* Grid Layout for Form */
+
     .form-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -133,7 +132,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         font-size: 16px;
     }
 
-    /* Alerts */
+
     .alert {
         padding: 12px;
         border-radius: 8px;

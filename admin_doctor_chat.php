@@ -7,17 +7,17 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
-// REPLY
+
 if (isset($_POST['send_reply'])) {
     $doc_id = $_POST['doc_id'];
     $reply = mysqli_real_escape_string($conn, $_POST['message']);
-    // user_id=0 maintains the channel
+
     mysqli_query($conn, "INSERT INTO messages (user_id, doctor_id, sender, message) VALUES ('0', '$doc_id', 'admin', '$reply')");
     header("Location: admin_doctor_chat.php?doc_id=$doc_id");
     exit();
 }
 
-// FETCH DOCTOR LIST (Doctors who have user_id=0 messages)
+
 $list_sql = "SELECT DISTINCT d.id, d.name, d.specialty 
              FROM messages m 
              JOIN doctors d ON m.doctor_id = d.id 
@@ -25,7 +25,7 @@ $list_sql = "SELECT DISTINCT d.id, d.name, d.specialty
              ORDER BY m.created_at DESC";
 $doc_list = mysqli_query($conn, $list_sql);
 
-// FETCH ACTIVE CHAT
+
 $active_msgs = null;
 $current_doc = null;
 if (isset($_GET['doc_id'])) {

@@ -1,26 +1,25 @@
 <?php
-// 1. Load Data FIRST (Before header)
+
 include 'blog_data.php';
 
-// 2. Check ID and Get Article Details
+
 if (isset($_GET['id']) && isset($posts[$_GET['id']])) {
     $id = $_GET['id'];
     $article = $posts[$id];
 
-    // 3. ASSIGN THE ARTICLE NAME TO THE PAGE TITLE
+
     $page_title = $article['title'];
 } else {
-    // If article doesn't exist, go back to Blog
+
     echo "<script>window.location.href='Blog.php';</script>";
     exit();
 }
 
-// 4. NOW include the header (It will use the $page_title we just set)
+
 include 'header.php';
 ?>
 
 <style>
-    /* SINGLE POST STYLES */
     .article-container {
         max-width: 800px;
         margin: 0 auto 80px auto;
@@ -69,7 +68,6 @@ include 'header.php';
         color: #444;
     }
 
-    /* Typography inside the article body */
     .article-body h3 {
         font-size: 26px;
         color: var(--text-dark);

@@ -1,14 +1,14 @@
 <?php
 $page_title = "Edit Profile";
 
-// 1. START SESSION SAFELY
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 include 'db_connect.php';
 
-// 2. CHECK LOGIN
+
 if (!isset($_SESSION['user_id'])) {
     echo "<script>window.location.href='login.php';</script>";
     exit();
@@ -18,14 +18,14 @@ $user_id = $_SESSION['user_id'];
 $message = "";
 $msg_type = "";
 
-// 3. FETCH CURRENT USER DATA (To pre-fill the form)
+
 $sql = "SELECT * FROM users WHERE id = '$user_id'";
 $result = mysqli_query($conn, $sql);
 $user = mysqli_fetch_assoc($result);
 
-// 4. HANDLE FORM SUBMISSION
+
 if (isset($_POST['update_profile'])) {
-    // Sanitize Basic Inputs
+
     $full_name = mysqli_real_escape_string($conn, $_POST['name']); // input name='name'
     $email     = mysqli_real_escape_string($conn, $_POST['email']);
     $phone     = mysqli_real_escape_string($conn, $_POST['phone']);
@@ -33,21 +33,20 @@ if (isset($_POST['update_profile'])) {
     $gender    = mysqli_real_escape_string($conn, $_POST['gender']);
     $address   = mysqli_real_escape_string($conn, $_POST['address']);
 
-    // --- PASSWORD UPDATE LOGIC ---
-    $password_update_sql = ""; // Default: empty (no password change)
-    $allow_update = true;      // Flag to stop update if password checks fail
 
-    // Check if user is trying to change password
+    $password_update_sql = "";
+    $allow_update = true;
+
+
     if (!empty($_POST['current_password'])) {
         $current_password = $_POST['current_password'];
         $new_password     = $_POST['new_password'];
         $confirm_password = $_POST['confirm_password'];
 
-        // A. Verify Current Password matches DB
-        // Note: Using password_verify for security (Matches your Register code)
+
         if (password_verify($current_password, $user['password'])) {
 
-            // B. Check if New Password matches Confirm
+
             if ($new_password === $confirm_password && !empty($new_password)) {
                 $hashed_new_pass = password_hash($new_password, PASSWORD_DEFAULT);
                 $password_update_sql = ", password = '$hashed_new_pass'";
@@ -63,7 +62,7 @@ if (isset($_POST['update_profile'])) {
         }
     }
 
-    // --- EXECUTE UPDATE ---
+
     if ($allow_update) {
         $update_sql = "UPDATE users SET 
                        full_name = '$full_name', 
@@ -76,13 +75,13 @@ if (isset($_POST['update_profile'])) {
                        WHERE id = '$user_id'";
 
         if (mysqli_query($conn, $update_sql)) {
-            // Update Session Name Immediately
+
             $_SESSION['username'] = $full_name;
 
             $message = "Profile updated successfully!";
             $msg_type = "success";
 
-            // Refresh data to show updates
+
             $result = mysqli_query($conn, $sql);
             $user = mysqli_fetch_assoc($result);
         } else {
@@ -96,7 +95,6 @@ include 'header.php';
 ?>
 
 <style>
-    /* Reusing your Registration Style for Consistency */
     body {
         background-color: #f3f4f6;
     }
@@ -113,7 +111,7 @@ include 'header.php';
         background: white;
         width: 100%;
         max-width: 800px;
-        /* Wider for 2 columns */
+
         padding: 40px;
         border-radius: 20px;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
@@ -135,7 +133,7 @@ include 'header.php';
         text-align: center;
     }
 
-    /* Grid Layout */
+
     .form-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -173,7 +171,7 @@ include 'header.php';
         box-shadow: 0 0 0 4px rgba(12, 90, 219, 0.1);
     }
 
-    /* Section Divider */
+
     .section-divider {
         grid-column: span 2;
         border-top: 1px solid #e5e7eb;
@@ -259,7 +257,7 @@ include 'header.php';
         <form method="POST">
             <div class="form-grid">
 
-                <!-- PERSONAL DETAILS SECTION -->
+
                 <div class="input-group full-width">
                     <label>Full Name</label>
                     <input type="text" name="name" value="<?php echo htmlspecialchars($user['full_name'] ?? ''); ?>" required>

@@ -3,21 +3,18 @@ $page_title = "Home";
 include 'header.php'; ?>
 
 <style>
-    /* ===== PAGE SPECIFIC STYLES ===== */
-
-    /* 1. HERO SECTION */
     .hero-section {
         position: relative;
         min-height: 90vh;
         display: flex;
         align-items: center;
-        /* Subtle background pattern/gradient */
+
         background: linear-gradient(135deg, #f8f9fa 0%, #eef2ff 100%);
         overflow: hidden;
         padding: 0 8%;
     }
 
-    /* Decorative Circle */
+
     .hero-section::after {
         content: '';
         position: absolute;
@@ -53,7 +50,7 @@ include 'header.php'; ?>
         display: inline-block;
     }
 
-    /* Underline effect for 'Priority' */
+
     .hero-text h1 span::after {
         content: '';
         position: absolute;
@@ -62,7 +59,7 @@ include 'header.php'; ?>
         bottom: 5px;
         left: 0;
         background: rgba(255, 77, 109, 0.2);
-        /* Accent color transparent */
+
         z-index: -1;
     }
 
@@ -96,7 +93,7 @@ include 'header.php'; ?>
         color: white;
     }
 
-    /* IMAGE STYLING */
+
     .hero-image {
         position: relative;
         display: flex;
@@ -107,13 +104,13 @@ include 'header.php'; ?>
         width: 100%;
         max-width: 650px;
         border-radius: 20px;
-        /* High Quality Shadow */
+
         box-shadow: 0 20px 80px rgba(0, 0, 0, 0.15);
         animation: float 6s ease-in-out infinite;
         object-fit: cover;
     }
 
-    /* Floating Badge on Hero Image */
+
     .floating-card {
         position: absolute;
         bottom: 60px;
@@ -141,7 +138,7 @@ include 'header.php'; ?>
         font-size: 24px;
     }
 
-    /* 2. STATS STRIP */
+
     .stats-section {
         background: white;
         padding: 60px 8%;
@@ -169,7 +166,7 @@ include 'header.php'; ?>
         letter-spacing: 1px;
     }
 
-    /* 3. SERVICES SECTION */
+
     .services-section {
         padding: 100px 8%;
         background: #f9fafb;
@@ -244,7 +241,7 @@ include 'header.php'; ?>
         line-height: 1.6;
     }
 
-    /* 4. EMERGENCY BANNER */
+
     .emergency-banner {
         background: linear-gradient(90deg, #1f2937 0%, #111827 100%);
         padding: 60px 8%;
@@ -278,7 +275,7 @@ include 'header.php'; ?>
         box-shadow: 0 10px 20px rgba(255, 77, 109, 0.3);
     }
 
-    /* ANIMATIONS */
+
     @keyframes float {
         0% {
             transform: translateY(0px);
@@ -305,7 +302,7 @@ include 'header.php'; ?>
         }
     }
 
-    /* RESPONSIVE */
+
     @media (max-width: 1024px) {
         .hero-text h1 {
             font-size: 42px;

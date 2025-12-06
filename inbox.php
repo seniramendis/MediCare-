@@ -3,7 +3,7 @@ $page_title = "Messages";
 session_start();
 include 'db_connect.php';
 
-// 1. SECURITY CHECK (Prevents access if not logged in)
+
 if (!isset($_SESSION['user_id'])) {
     echo "<script>window.location.href='login.php';</script>";
     exit();
@@ -12,27 +12,27 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $selected_doctor_id = isset($_GET['doctor_id']) ? intval($_GET['doctor_id']) : null;
 
-// --- HANDLE SEND MESSAGE ---
+
 if (isset($_POST['send_msg']) && $selected_doctor_id && !empty(trim($_POST['message']))) {
     $msg = mysqli_real_escape_string($conn, $_POST['message']);
     mysqli_query($conn, "INSERT INTO messages (user_id, doctor_id, sender, message) VALUES ('$user_id', '$selected_doctor_id', 'patient', '$msg')");
 
-    // FIX: JavaScript redirect prevents "Headers already sent" error
+
     echo "<script>window.location.href='inbox.php?doctor_id=$selected_doctor_id';</script>";
     exit();
 }
 
-// --- HANDLE DELETE MESSAGE ---
+
 if (isset($_POST['delete_msg_id']) && $selected_doctor_id) {
     $del_id = intval($_POST['delete_msg_id']);
     mysqli_query($conn, "DELETE FROM messages WHERE id='$del_id' AND user_id='$user_id'");
 
-    // FIX: JavaScript redirect prevents "Headers already sent" error
+
     echo "<script>window.location.href='inbox.php?doctor_id=$selected_doctor_id';</script>";
     exit();
 }
 
-// 2. FETCH SIDEBAR LIST
+
 $sidebar_sql = "
     SELECT d.id, d.name, d.image, d.specialty, m.message, m.created_at
     FROM doctors d
@@ -47,7 +47,7 @@ $sidebar_sql = "
 ";
 $sidebar_result = mysqli_query($conn, $sidebar_sql);
 
-// 3. FETCH ACTIVE CHAT
+
 $active_doc = null;
 $msg_query = null;
 
@@ -76,10 +76,10 @@ include 'header.php';
         height: 100vh;
     }
 
-    /* --- LAYOUT & SIDEBAR --- */
+
     .inbox-layout {
         display: flex;
-        /* Wide layout (98%) */
+
         width: 98%;
         height: calc(100vh - 80px);
         margin: 0 auto;
@@ -214,7 +214,7 @@ include 'header.php';
         color: var(--primary-color);
     }
 
-    /* --- CHAT AREA --- */
+
     .chat-panel {
         flex: 1;
         display: flex;
@@ -294,7 +294,7 @@ include 'header.php';
 
     .msg-row.patient .msg-bubble {
         background: #1f2937;
-        /* Monochrome Elegant Black/Grey */
+
         color: white;
         border-radius: 12px 12px 0 12px;
     }

@@ -2,7 +2,7 @@
 session_start();
 include 'db_connect.php';
 
-// 1. SECURITY CHECK
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
@@ -11,16 +11,16 @@ if (!isset($_SESSION['user_id'])) {
 $patient_id = $_SESSION['user_id'];
 $patient_name = $_SESSION['username'];
 
-// --- HANDLE APPOINTMENT CANCELLATION ---
+
 if (isset($_GET['cancel_id'])) {
     $cancel_id = (int)$_GET['cancel_id'];
-    // Only allow deleting own appointments that are not completed
+
     mysqli_query($conn, "DELETE FROM appointments WHERE id='$cancel_id' AND patient_id='$patient_id' AND status != 'Completed'");
     header("Location: dashboard_patient.php");
     exit();
 }
 
-// Stats
+
 $appts_query = mysqli_query($conn, "SELECT COUNT(*) as total FROM appointments WHERE patient_id='$patient_id'");
 $my_appts_count = mysqli_fetch_assoc($appts_query)['total'];
 
@@ -30,7 +30,7 @@ $my_rx_count = mysqli_fetch_assoc($rx_query)['total'];
 $due_query = mysqli_query($conn, "SELECT SUM(amount) as total FROM invoices WHERE patient_id='$patient_id' AND status='unpaid'");
 $total_due = mysqli_fetch_assoc($due_query)['total'] ?? 0;
 
-// FETCH UPCOMING APPOINTMENTS
+
 $upcoming_query = "SELECT a.*, d.name as doc_name 
                    FROM appointments a 
                    JOIN doctors d ON a.doctor_id = d.id 
@@ -38,7 +38,7 @@ $upcoming_query = "SELECT a.*, d.name as doc_name
                    ORDER BY a.appointment_time ASC";
 $res_upcoming = mysqli_query($conn, $upcoming_query);
 
-// FETCH PRESCRIPTIONS
+
 $presc_query = "SELECT p.*, d.name as doc_name 
                 FROM prescriptions p 
                 JOIN doctors d ON p.doctor_id = d.id 
@@ -46,7 +46,7 @@ $presc_query = "SELECT p.*, d.name as doc_name
                 ORDER BY p.created_at DESC";
 $res_presc = mysqli_query($conn, $presc_query);
 
-// PAYMENT HISTORY
+
 $paid_history = mysqli_query($conn, "SELECT * FROM payments WHERE patient_id='$patient_id' ORDER BY paid_at DESC LIMIT 5");
 ?>
 

@@ -12,7 +12,7 @@ $doctor_id = $_SESSION['user_id'];
 $doctor_name = $_SESSION['username'];
 $display_name = trim(str_ireplace("Dr.", "", $doctor_name));
 
-// --- HANDLE PRESCRIPTION SUBMISSION ---
+
 if (isset($_POST['send_rx'])) {
     $p_id = $_POST['rx_patient_id'];
     $diag = mysqli_real_escape_string($conn, $_POST['diagnosis']);
@@ -28,7 +28,7 @@ if (isset($_POST['send_rx'])) {
     }
 }
 
-// --- HANDLE INVOICE SUBMISSION ---
+
 if (isset($_POST['send_bill'])) {
     $appt_val = $_POST['bill_appt_id'];
     list($appt_id, $pat_id) = explode('_', $appt_val);

@@ -3,7 +3,7 @@ $page_title = "Patient Messages";
 session_start();
 include 'db_connect.php';
 
-// 1. SECURITY CHECK (Doctor Only)
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
     header("Location: login.php");
     exit();
@@ -12,7 +12,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
 $doctor_id = $_SESSION['user_id'];
 $selected_patient_id = isset($_GET['patient_id']) ? intval($_GET['patient_id']) : null;
 
-// --- HANDLE SEND MESSAGE ---
+
 if (isset($_POST['send_msg']) && $selected_patient_id && !empty(trim($_POST['message']))) {
     $msg = mysqli_real_escape_string($conn, $_POST['message']);
     // Sender is 'doctor'
@@ -21,7 +21,7 @@ if (isset($_POST['send_msg']) && $selected_patient_id && !empty(trim($_POST['mes
     exit();
 }
 
-// 2. FETCH SIDEBAR LIST (Patients who have chatted)
+
 $sidebar_sql = "
     SELECT u.id, u.full_name, m.message, m.created_at
     FROM users u
@@ -36,14 +36,14 @@ $sidebar_sql = "
 ";
 $sidebar_result = mysqli_query($conn, $sidebar_sql);
 
-// 3. FETCH ACTIVE CHAT
+
 $active_patient = null;
 $msg_query = null;
 
 if ($selected_patient_id) {
     $pat_query = mysqli_query($conn, "SELECT full_name, email FROM users WHERE id = '$selected_patient_id'");
     $active_patient = mysqli_fetch_assoc($pat_query);
-    // Fetch conversation
+
     $msg_query = mysqli_query($conn, "SELECT * FROM messages WHERE user_id='$selected_patient_id' AND doctor_id='$doctor_id' ORDER BY created_at ASC");
 }
 
@@ -66,7 +66,7 @@ include 'header.php';
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
     }
 
-    /* SIDEBAR */
+
     .sidebar {
         width: 350px;
         border-right: 1px solid #e5e7eb;
@@ -110,7 +110,7 @@ include 'header.php';
         display: block;
     }
 
-    /* CHAT AREA */
+
     .chat-panel {
         flex: 1;
         display: flex;
@@ -146,12 +146,12 @@ include 'header.php';
         justify-content: flex-end;
     }
 
-    /* Doctor is right */
+
     .msg-row.patient {
         justify-content: flex-start;
     }
 
-    /* Patient is left */
+
 
     .msg-bubble {
         max-width: 70%;

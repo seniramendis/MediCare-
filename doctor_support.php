@@ -9,20 +9,20 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'doctor') {
 }
 
 $doctor_id = $_SESSION['user_id'];
-// NOTE: We use user_id='0' to represent "Not a Patient" context for this specific chat link
+
 $admin_flag = 0;
 
-// SEND
+
 if (isset($_POST['send_msg']) && !empty(trim($_POST['message']))) {
     $msg = mysqli_real_escape_string($conn, $_POST['message']);
-    // user_id=0 distinguishes this as a Doctor-Admin chat (since user_id is usually patient)
+
     $sql = "INSERT INTO messages (user_id, doctor_id, sender, message) VALUES ('$admin_flag', '$doctor_id', 'doctor', '$msg')";
     mysqli_query($conn, $sql);
     header("Location: doctor_support.php");
     exit();
 }
 
-// FETCH
+
 $chat_q = mysqli_query($conn, "SELECT * FROM messages WHERE user_id='$admin_flag' AND doctor_id='$doctor_id' ORDER BY created_at ASC");
 
 include 'header.php';

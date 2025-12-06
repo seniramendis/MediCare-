@@ -53,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         body {
-            /* Deep Dark Slate for Professional look */
+
             background-color: #0f172a;
             height: 100vh;
             display: flex;
@@ -63,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         .admin-login-box {
             background: #1e293b;
-            /* Lighter slate for the card */
+
             width: 400px;
             padding: 40px;
             border-radius: 12px;
@@ -76,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .lock-icon {
             font-size: 40px;
             color: #3b82f6;
-            /* Changed from Red to Blue */
+
             margin-bottom: 20px;
         }
 
@@ -118,7 +118,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         input:focus {
             border-color: #3b82f6;
-            /* Blue Focus */
+
             background: #475569;
         }
 
@@ -126,7 +126,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             width: 100%;
             padding: 12px;
             background: #2563eb;
-            /* Royal Blue Button */
+
             color: white;
             border: none;
             border-radius: 6px;
@@ -138,7 +138,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         .btn-login:hover {
             background: #1d4ed8;
-            /* Darker Blue on Hover */
+
         }
 
         .error-msg {

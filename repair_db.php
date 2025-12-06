@@ -1,10 +1,10 @@
 <?php
-// repair_db.php
+
 include 'db_connect.php';
 
 echo "<h2>🚑 Repairing Database...</h2>";
 
-// 1. Add missing 'patient_name' column
+
 $check = mysqli_query($conn, "SHOW COLUMNS FROM appointments LIKE 'patient_name'");
 if (mysqli_num_rows($check) == 0) {
     $sql = "ALTER TABLE appointments ADD COLUMN patient_name VARCHAR(100) AFTER patient_id";
@@ -17,7 +17,7 @@ if (mysqli_num_rows($check) == 0) {
     echo "<p style='color:blue'>ℹ️ Column 'patient_name' already exists.</p>";
 }
 
-// 2. Fix existing appointments (Populate empty names)
+
 $fix_sql = "UPDATE appointments a 
             JOIN users u ON a.patient_id = u.id 
             SET a.patient_name = u.full_name 

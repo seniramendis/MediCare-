@@ -1,15 +1,14 @@
 <?php
-// fix_rx_table.php
+
 include 'db_connect.php';
 
 echo "<h2>💊 Fixing Prescriptions Table...</h2>";
 
-// Check if 'dosage_instructions' column exists
+
 $check = mysqli_query($conn, "SHOW COLUMNS FROM prescriptions LIKE 'dosage_instructions'");
 
 if (mysqli_num_rows($check) == 0) {
-    // Column is missing, so add it
-    // We add it as a TEXT field so you can write long instructions
+
     $sql = "ALTER TABLE prescriptions ADD COLUMN dosage_instructions TEXT AFTER medicine_list";
 
     if (mysqli_query($conn, $sql)) {

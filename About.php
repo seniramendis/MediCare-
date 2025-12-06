@@ -1,11 +1,11 @@
 <?php
-// SET THE BROWSER TAB TITLE HERE
+
 $page_title = "About Us";
 include 'header.php';
 ?>
 
 <style>
-    /* ===== PAGE HEADER ===== */
+    
     .page-header {
         background: linear-gradient(135deg, #f8f9fa 0%, #eef2ff 100%);
         padding: 80px 0;
@@ -28,7 +28,7 @@ include 'header.php';
         margin: 0 auto;
     }
 
-    /* ===== MAIN CONTENT ===== */
+    
     .about-section {
         max-width: 1200px;
         margin: 0 auto 100px auto;
@@ -53,7 +53,7 @@ include 'header.php';
         font-size: 16px;
     }
 
-    /* IMAGE STYLING (API IMAGE) */
+   
     .about-image {
         position: relative;
     }
@@ -71,7 +71,7 @@ include 'header.php';
         transform: scale(1.02);
     }
 
-    /* FEATURES GRID */
+    
     .feature-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -105,7 +105,7 @@ include 'header.php';
         font-size: 15px;
     }
 
-    /* ===== LOCATION & MAP SECTION ===== */
+   
     .location-wrapper {
         max-width: 1200px;
         margin: 0 auto 80px auto;
@@ -146,7 +146,7 @@ include 'header.php';
         margin-left: 28px;
     }
 
-    /* MAP */
+ 
     .map-container iframe {
         width: 100%;
         height: 100%;
@@ -154,7 +154,7 @@ include 'header.php';
         border: 0;
     }
 
-    /* GET DIRECTIONS BUTTON */
+ 
     .btn-direction {
         background: white;
         color: var(--primary-color);
@@ -254,7 +254,7 @@ include 'header.php';
     function getDirections() {
         const errorMsg = document.getElementById('geo-error');
 
-        // 1. UPDATED COORDINATES FOR KANDANA (No 84)
+
         const hospitalLat = 7.0450;
         const hospitalLng = 79.8971;
 
@@ -270,7 +270,7 @@ include 'header.php';
             const userLat = position.coords.latitude;
             const userLng = position.coords.longitude;
 
-            // Open Google Maps with route
+            
             const mapUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${hospitalLat},${hospitalLng}&travelmode=driving`;
             window.open(mapUrl, '_blank');
         }

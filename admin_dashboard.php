@@ -2,11 +2,9 @@
 session_start();
 include 'db_connect.php';
 
-// --- CONFIGURATION ---
-$doctor_table = "doctors";
-// ---------------------
 
-// 1. AUTHENTICATION
+$doctor_table = "doctors";
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header("Location: admin_login.php");
     exit();
@@ -18,15 +16,13 @@ $view = isset($_GET['view']) ? $_GET['view'] : 'dashboard';
 $edit_mode = isset($_GET['edit']);
 $edit_id = isset($_GET['id']) ? $_GET['id'] : null;
 
-// --- 2. HANDLE SAVING DATA (POST) ---
 
-// SAVE DOCTOR (With Image Upload)
 if (isset($_POST['save_doctor'])) {
     $name = mysqli_real_escape_string($conn, $_POST['name']);
     $specialty = mysqli_real_escape_string($conn, $_POST['specialty']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
 
-    // --- IMAGE UPLOAD LOGIC ---
+
     $image_sql_part = "";
     $final_image_path = "images/doctor.png";
 
@@ -86,7 +82,7 @@ if (isset($_POST['save_doctor'])) {
     }
 }
 
-// SAVE PATIENT
+
 if (isset($_POST['save_patient'])) {
     $name = mysqli_real_escape_string($conn, $_POST['name']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
@@ -121,7 +117,7 @@ if (isset($_POST['save_patient'])) {
     }
 }
 
-// SAVE APPOINTMENT
+
 if (isset($_POST['save_appointment'])) {
     $pat_id = $_POST['patient_id'];
     $doc_id = $_POST['doctor_id'];
@@ -147,7 +143,7 @@ if (isset($_POST['save_appointment'])) {
     }
 }
 
-// --- 3. HANDLE DELETION ---
+
 if (isset($_GET['delete']) && isset($_GET['id']) && isset($_GET['type'])) {
     $id = $_GET['id'];
     $type = $_GET['type'];
@@ -165,7 +161,7 @@ if (isset($_GET['delete']) && isset($_GET['id']) && isset($_GET['type'])) {
     exit();
 }
 
-// --- 4. HELPERS ---
+
 function getPatient($conn, $id)
 {
     return mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM users WHERE id='$id'"));

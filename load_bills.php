@@ -14,7 +14,7 @@ echo '<div style="font-size: 32px; font-weight: 700; color: #dc3545; margin: 10p
 if (mysqli_num_rows($list_q) > 0) {
     echo '<table style="width:100%; border-collapse:collapse; font-size:13px;">';
     while ($bill = mysqli_fetch_assoc($list_q)) {
-        // --- FIX: Read from the correct column 'service_description' ---
+
         $svc_name = $bill['service_description'];
 
         echo '<tr><td style="padding:10px 0; border-bottom:1px solid #eee;">' . htmlspecialchars($svc_name) . '</td>';
@@ -24,7 +24,7 @@ if (mysqli_num_rows($list_q) > 0) {
         echo '<input type="hidden" name="invoice_id" value="' . $bill['id'] . '">';
         echo '<input type="hidden" name="amount" value="' . $bill['amount'] . '">';
 
-        // --- FIX: Send it as 'service_name' so payment_gateway.php understands it ---
+
         echo '<input type="hidden" name="service_name" value="' . htmlspecialchars($svc_name) . '">';
 
         echo '<button type="submit" name="pay_now" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Pay Now</button>';

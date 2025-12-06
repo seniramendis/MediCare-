@@ -1,11 +1,11 @@
 <?php
-// 1. START SESSION & CONNECT DB FIRST
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 include 'db_connect.php';
 
-// 2. CHECK IF DOCTOR ID EXISTS & FETCH DATA
+
 if (isset($_GET['id'])) {
     $doctor_id = mysqli_real_escape_string($conn, $_GET['id']);
 
@@ -29,7 +29,7 @@ if (isset($_GET['id'])) {
 
 include 'header.php';
 
-// 4. HANDLE REVIEW SUBMISSION
+
 $msg = "";
 if (isset($_POST['submit_review'])) {
     if (isset($_SESSION['user_id'])) {
@@ -53,18 +53,17 @@ if (isset($_POST['submit_review'])) {
     }
 }
 
-// 5. FETCH REVIEWS
+
 $reviews_sql = "SELECT * FROM reviews WHERE doctor_id = '$doctor_id' ORDER BY created_at DESC";
 $reviews_result = mysqli_query($conn, $reviews_sql);
 ?>
 
 <style>
-    /* --- GLOBAL LAYOUT --- */
     body {
         background-color: #f9fbfd;
     }
 
-    /* --- PROFILE HEADER BACKGROUND --- */
+
     .profile-header-bg {
         background: linear-gradient(135deg, #0c5adb 0%, #062f75 100%);
         height: 300px;
@@ -76,7 +75,7 @@ $reviews_result = mysqli_query($conn, $reviews_sql);
         z-index: -1;
     }
 
-    /* --- MAIN CARD --- */
+
     .profile-wrapper {
         max-width: 1100px;
         margin: 120px auto 60px auto;
@@ -89,7 +88,7 @@ $reviews_result = mysqli_query($conn, $reviews_sql);
         overflow: hidden;
     }
 
-    /* --- SIDEBAR (Left) --- */
+
     .profile-sidebar {
         background: #f8faff;
         text-align: center;
@@ -173,7 +172,7 @@ $reviews_result = mysqli_query($conn, $reviews_sql);
         box-shadow: 0 12px 25px rgba(12, 90, 219, 0.35);
     }
 
-    /* NEW MESSAGE BUTTON STYLE */
+
     .btn-msg {
         display: block;
         width: 100%;
@@ -197,7 +196,7 @@ $reviews_result = mysqli_query($conn, $reviews_sql);
         transform: translateY(-3px);
     }
 
-    /* Disabled/Login button style */
+
     .btn-msg.login-req {
         border-color: #9ca3af;
         color: #6b7280;
@@ -209,7 +208,7 @@ $reviews_result = mysqli_query($conn, $reviews_sql);
         border-color: var(--primary-color);
     }
 
-    /* --- CONTENT AREA (Right) --- */
+
     .profile-content {
         padding: 50px;
     }
@@ -239,7 +238,7 @@ $reviews_result = mysqli_query($conn, $reviews_sql);
         margin-bottom: 40px;
     }
 
-    /* --- REVIEW STYLES --- */
+
     .reviews-container {
         margin-top: 50px;
     }

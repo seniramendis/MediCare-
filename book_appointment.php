@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $reason = mysqli_real_escape_string($conn, $_POST['message']);
     $full_time = date('Y-m-d H:i:s', strtotime("$date $time"));
 
-    // FIX: Status is 'Pending' so Doctor can Accept it
+
     $sql = "INSERT INTO appointments (doctor_id, patient_id, appointment_time, reason, status) 
             VALUES ('$doctor_id', '$patient_id', '$full_time', '$reason', 'Pending')";
 
@@ -165,11 +165,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <select name="doctor_id" required>
                         <option value="">-- Choose a Specialist --</option>
                         <?php
-                        // FIX: Fetch from 'doctors' table (not users)
+
                         $doc_res = mysqli_query($conn, "SELECT id, name, specialty FROM doctors");
                         while ($row = mysqli_fetch_assoc($doc_res)) {
                             $specialty = !empty($row['specialty']) ? " (" . $row['specialty'] . ")" : "";
-                            // Using 'name' instead of 'full_name' as per doctors table structure
+
                             echo "<option value='" . $row['id'] . "'>Dr. " . $row['name'] . $specialty . "</option>";
                         }
                         ?>

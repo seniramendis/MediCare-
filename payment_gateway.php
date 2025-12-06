@@ -2,7 +2,7 @@
 session_start();
 include 'db_connect.php';
 
-// 1. RECEIVE DATA (From Patient Dashboard)
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
@@ -12,22 +12,22 @@ $invoice_id = $_POST['invoice_id'] ?? '';
 $amount = $_POST['amount'] ?? '';
 $service_name = $_POST['service_name'] ?? 'Medical Service';
 
-// 2. PROCESS PAYMENT (When User Clicks "Pay LKR...")
+
 if (isset($_POST['confirm_payment'])) {
     $inv_id = $_POST['invoice_id'];
     $amt = $_POST['amount'];
     $patient_id = $_SESSION['user_id'];
 
-    // Get Doctor ID from the invoice to credit them
+
     $doc_query = mysqli_query($conn, "SELECT doctor_id FROM invoices WHERE id='$inv_id'");
     $doc_data = mysqli_fetch_assoc($doc_query);
     $doctor_id = $doc_data['doctor_id'];
 
-    // A. Update Invoice Status
+
     $update = "UPDATE invoices SET status='paid', payment_method='Secure Card' WHERE id='$inv_id'";
     mysqli_query($conn, $update);
 
-    // B. Add to Payments Table (For Doctor's Revenue)
+
     $insert = "INSERT INTO payments (patient_id, doctor_id, amount, payment_method, paid_at) 
                VALUES ('$patient_id', '$doctor_id', '$amt', 'Secure Card', NOW())";
 
@@ -74,7 +74,7 @@ if (isset($_POST['confirm_payment'])) {
             padding: 20px;
         }
 
-        /* Main Container */
+
         .payment-container {
             display: flex;
             width: 100%;
@@ -85,7 +85,7 @@ if (isset($_POST['confirm_payment'])) {
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
         }
 
-        /* Left Side: Summary (Colored) */
+
         .summary-panel {
             flex: 1;
             background: linear-gradient(135deg, #0c5adb 0%, #06b6d4 100%);
@@ -98,7 +98,7 @@ if (isset($_POST['confirm_payment'])) {
             overflow: hidden;
         }
 
-        /* Decorative circles */
+
         .summary-panel::before {
             content: '';
             position: absolute;
@@ -165,7 +165,7 @@ if (isset($_POST['confirm_payment'])) {
             gap: 5px;
         }
 
-        /* Right Side: Form (White) */
+
         .form-panel {
             flex: 1.4;
             padding: 50px;

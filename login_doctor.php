@@ -122,7 +122,7 @@ include 'header.php';
 
         <div class="divider"></div>
 
-        <!-- LINK BACK TO PATIENT LOGIN -->
+
         <p style="font-size: 14px; color: var(--text-light);">
             Are you a patient?
             <a href="login.php" style="color: var(--text-dark); font-weight: 600; text-decoration: none;">Login here</a>

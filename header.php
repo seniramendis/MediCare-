@@ -17,10 +17,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- DYNAMIC TITLE -->
     <title><?php echo isset($page_title) ? $page_title . " | MediCare+" : "MediCare+"; ?></title>
 
-    <!-- FAVICON -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230c5adb%22/><path fill=%22%23ffffff%22 d=%22M35 20h30v25h25v30h-25v25h-30v-25h-25v-30h25z%22/></svg>">
 
     <script src="https://kit.fontawesome.com/9e166a3863.js" crossorigin="anonymous"></script>
@@ -77,6 +75,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
             top: 0;
             z-index: 1000;
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+            /* Allow wrapping for mobile menu */
+            flex-wrap: wrap;
         }
 
         .logo {
@@ -89,6 +89,19 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
         .logo span {
             color: var(--accent-color);
+        }
+
+        /* Menu Toggle Button (Hidden on Desktop) */
+        .menu-toggle {
+            display: none;
+            font-size: 24px;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .menu-toggle:hover {
+            color: var(--primary-color);
         }
 
         .navbar ul {
@@ -248,18 +261,65 @@ $current_page = basename($_SERVER['PHP_SELF']);
             }
         }
 
-        @media (max-width: 768px) {
+        /* ===== MOBILE RESPONSIVENESS ===== */
+        @media (max-width: 900px) {
             .main-header {
                 padding: 15px 20px;
-                flex-direction: column;
-                gap: 10px;
+            }
+
+            /* Show Hamburger */
+            .menu-toggle {
+                display: block;
+            }
+
+            /* Hide Navbar by default on mobile */
+            .navbar {
+                display: none;
+                width: 100%;
+                margin-top: 15px;
+                padding-top: 15px;
+                border-top: 1px solid rgba(0, 0, 0, 0.05);
+                animation: fadeIn 0.3s ease-in-out;
+            }
+
+            /* Class to toggle visibility via JS */
+            .navbar.active {
+                display: block;
             }
 
             .navbar ul {
-                gap: 15px;
-                font-size: 14px;
-                flex-wrap: wrap;
+                flex-direction: column;
+                gap: 20px;
+                width: 100%;
+            }
+
+            .navbar ul li {
+                width: 100%;
+                text-align: center;
+            }
+
+            .navbar ul li a {
+                display: block;
+                padding: 5px 0;
+                font-size: 16px;
+            }
+
+            .user-dropdown {
+                width: 100%;
+            }
+
+            .user-trigger {
                 justify-content: center;
+                width: 100%;
+            }
+
+            .dropdown-menu {
+                position: static;
+                /* Stack normally on mobile */
+                width: 100%;
+                box-shadow: none;
+                border: 1px solid #eee;
+                margin-top: 10px;
             }
         }
 
@@ -278,11 +338,20 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
     <header class="main-header">
         <a href="Home.php" class="logo"><span>M</span>edi<span>C</span>are+</a>
-        <nav class="navbar">
+
+        <div class="menu-toggle" id="mobile-menu-btn">
+            <i class="fas fa-bars"></i>
+        </div>
+
+        <nav class="navbar" id="navbar">
             <ul>
                 <li><a href="Home.php" class="<?= $current_page == 'Home.php' ? 'active' : '' ?>">Home</a></li>
                 <li><a href="About.php" class="<?= $current_page == 'About.php' ? 'active' : '' ?>">About</a></li>
-                <li><a href="Doctor.php" class="<?= $current_page == 'Doctor.php' ? 'active' : '' ?>">Doctors</a></li>
+
+                <?php if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'doctor'): ?>
+                    <li><a href="Doctor.php" class="<?= $current_page == 'Doctor.php' ? 'active' : '' ?>">Doctors</a></li>
+                <?php endif; ?>
+
                 <li><a href="Review.php" class="<?= $current_page == 'Review.php' ? 'active' : '' ?>">Reviews</a></li>
                 <li><a href="Contact.php" class="<?= $current_page == 'Contact.php' ? 'active' : '' ?>">Contact</a></li>
                 <li><a href="Blog.php" class="<?= $current_page == 'Blog.php' ? 'active' : '' ?>">Blog</a></li>
@@ -292,24 +361,22 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 if (isset($_SESSION['user_id']) && $_SESSION['role'] !== 'admin'):
                 ?>
 
-                    <!-- Inbox Icon -->
-                    <li>
-                        <a href="inbox.php" class="icon-btn" title="My Messages">
-                            <i class="fas fa-comment-alt"></i>
-                        </a>
-                    </li>
+                    <?php if ($_SESSION['role'] !== 'doctor'): ?>
+                        <li>
+                            <a href="inbox.php" class="icon-btn" title="My Messages">
+                                <i class="fas fa-comment-alt"></i>
+                            </a>
+                        </li>
+                    <?php endif; ?>
 
-                    <li style="display: flex; align-items: center; gap: 15px;">
+                    <li style="display: flex; align-items: center; gap: 15px; justify-content: center;">
 
-                        <!-- DASHBOARD BUTTON -->
-                        <!-- This ensures Doctors go to their own dashboard -->
                         <?php if ($_SESSION['role'] == 'patient'): ?>
                             <a href="dashboard_patient.php" class="btn" style="padding: 8px 20px; font-size: 14px;">Dashboard</a>
                         <?php elseif ($_SESSION['role'] == 'doctor'): ?>
                             <a href="dashboard_doctor.php" class="btn" style="padding: 8px 20px; font-size: 14px;">Dashboard</a>
                         <?php endif; ?>
 
-                        <!-- USER DROPDOWN -->
                         <div class="user-dropdown">
                             <div class="user-trigger">
                                 <span>Hi, <?php echo htmlspecialchars($_SESSION['username']); ?></span>
@@ -329,9 +396,30 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     </li>
 
                 <?php else: ?>
-                    <!-- LOGGED OUT (OR ADMIN) STATE -->
                     <li><a href="login.php" class="btn" style="padding: 8px 20px; font-size: 14px;">Login</a></li>
                 <?php endif; ?>
             </ul>
         </nav>
     </header>
+
+    <script>
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const navBar = document.getElementById('navbar');
+
+        menuBtn.addEventListener('click', () => {
+            navBar.classList.toggle('active');
+
+            // Toggle icon between bars and times (X)
+            const icon = menuBtn.querySelector('i');
+            if (navBar.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
+    </script>
+</body>
+
+</html>

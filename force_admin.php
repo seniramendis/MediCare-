@@ -1,19 +1,19 @@
 <?php
 include 'db_connect.php';
 
-// 1. CLEANUP: Delete any existing admin with this email to avoid duplicates
+
 mysqli_query($conn, "DELETE FROM users WHERE email='admin@medicare.com'");
 
-// 2. CONFIG: Set the credentials
+
 $email = "admin@medicare.com";
 $pass  = "admin123";
 $role  = "admin";
 $name  = "System Admin";
 
-// 3. HASH: Let YOUR server generate the hash (Guaranteed to match)
+
 $hash = password_hash($pass, PASSWORD_DEFAULT);
 
-// 4. INSERT
+
 $sql = "INSERT INTO users (full_name, email, password, role) VALUES ('$name', '$email', '$hash', '$role')";
 
 if (mysqli_query($conn, $sql)) {

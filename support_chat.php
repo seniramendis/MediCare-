@@ -3,16 +3,15 @@ $page_title = "Support Chat";
 session_start();
 include 'db_connect.php';
 
-// 1. SECURITY CHECK
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 
 $user_id = $_SESSION['user_id'];
-$admin_id = 0; // 0 represents Admin
+$admin_id = 0;
 
-// 2. HANDLE SEND MESSAGE
+
 if (isset($_POST['send_msg']) && !empty(trim($_POST['message']))) {
     $msg = mysqli_real_escape_string($conn, $_POST['message']);
     $sql = "INSERT INTO messages (user_id, doctor_id, sender, message) VALUES ('$user_id', '$admin_id', 'patient', '$msg')";
@@ -21,7 +20,7 @@ if (isset($_POST['send_msg']) && !empty(trim($_POST['message']))) {
     exit();
 }
 
-// 3. FETCH MESSAGES
+
 $chat_q = mysqli_query($conn, "SELECT * FROM messages WHERE user_id='$user_id' AND doctor_id='$admin_id' ORDER BY created_at ASC");
 
 include 'header.php';

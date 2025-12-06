@@ -1,10 +1,10 @@
 <?php
 $page_title = "Chat with Doctor";
-// 1. START SESSION & CONNECT DB
+
 session_start();
 include 'db_connect.php';
 
-// 2. SECURITY CHECKS
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
@@ -17,7 +17,7 @@ if (!isset($_GET['doctor_id'])) {
 $user_id = $_SESSION['user_id'];
 $doctor_id = mysqli_real_escape_string($conn, $_GET['doctor_id']);
 
-// 3. HANDLE ACTIONS (Send / Delete)
+
 if (isset($_POST['send_msg']) && !empty(trim($_POST['message']))) {
     $msg = mysqli_real_escape_string($conn, $_POST['message']);
     mysqli_query($conn, "INSERT INTO messages (user_id, doctor_id, sender, message) VALUES ('$user_id', '$doctor_id', 'patient', '$msg')");
@@ -32,18 +32,17 @@ if (isset($_POST['delete_msg_id'])) {
     exit();
 }
 
-// 4. FETCH DATA
+
 $doc_q = mysqli_query($conn, "SELECT name, image FROM doctors WHERE id='$doctor_id'");
 $doctor = mysqli_fetch_assoc($doc_q);
 
 $chat_q = mysqli_query($conn, "SELECT * FROM messages WHERE user_id='$user_id' AND doctor_id='$doctor_id' ORDER BY created_at ASC");
 
-// 5. INCLUDE HEADER
+
 include 'header.php';
 ?>
 
 <style>
-    /* --- PAGE LAYOUT --- */
     body {
         background-color: #f0f2f5;
     }
@@ -69,7 +68,7 @@ include 'header.php';
         border: 1px solid #e5e7eb;
     }
 
-    /* HEADER */
+
     .chat-top-bar {
         background: white;
         padding: 15px 20px;
@@ -105,7 +104,7 @@ include 'header.php';
         margin: 0;
     }
 
-    /* MESSAGES AREA */
+
     .messages-area {
         flex: 1;
         padding: 20px;
@@ -118,14 +117,14 @@ include 'header.php';
         gap: 15px;
     }
 
-    /* Message Row Layout */
+
     .message-row {
         display: flex;
         width: 100%;
         align-items: center;
-        /* Vertically align bubble and trash bin */
+
         gap: 10px;
-        /* Space between bubble and trash */
+
     }
 
     .message-row.patient {
@@ -136,7 +135,7 @@ include 'header.php';
         justify-content: flex-start;
     }
 
-    /* BUBBLES */
+
     .bubble {
         max-width: 75%;
         padding: 12px 18px;
@@ -168,12 +167,12 @@ include 'header.php';
         text-align: right;
     }
 
-    /* DELETE BUTTON (OUTSIDE) */
+
     .delete-outside-btn {
         background: none;
         border: none;
         color: #d1d5db;
-        /* Light Gray by default */
+
         cursor: pointer;
         font-size: 14px;
         transition: 0.2s;
@@ -184,11 +183,11 @@ include 'header.php';
 
     .delete-outside-btn:hover {
         color: #ef4444;
-        /* Red on hover */
+
         transform: scale(1.1);
     }
 
-    /* INPUT AREA */
+
     .input-area {
         background: white;
         padding: 15px 20px;
@@ -296,7 +295,6 @@ include 'header.php';
 </div>
 
 <script>
-    // Auto-scroll to bottom
     window.onload = function() {
         var box = document.getElementById("scrollBox");
         box.scrollTop = box.scrollHeight;

@@ -1,4 +1,4 @@
-/* ===== HERO SECTION ===== */
+
 .hero {
     display: flex;
     justify-content: space-between;
@@ -32,7 +32,7 @@
     color: #6b7280;
 }
 
-/* ===== SERVICES ===== */
+
 .service-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));

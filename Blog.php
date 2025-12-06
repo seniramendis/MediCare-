@@ -1,11 +1,10 @@
 <?php
 $page_title = "Blog and Tips";
 include 'header.php';
-include 'blog_data.php'; // Pulls the data from the file above
+include 'blog_data.php';
 ?>
 
 <style>
-    /* PAGE HEADER */
     .page-header {
         background: linear-gradient(135deg, #f8f9fa 0%, #eef2ff 100%);
         padding: 80px 0;

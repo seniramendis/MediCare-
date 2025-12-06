@@ -3,7 +3,7 @@ $page_title = "Reviews";
 include 'header.php';
 include 'db_connect.php';
 
-// --- HANDLE REVIEW SUBMISSION ---
+
 $msg = "";
 if (isset($_POST['submit_review'])) {
     if (isset($_SESSION['user_id'])) {
@@ -17,7 +17,7 @@ if (isset($_POST['submit_review'])) {
 
         if (mysqli_query($conn, $sql)) {
             $msg = "<div class='alert-success'>Thank you! Your review has been posted.</div>";
-            // Refresh to show new review immediately
+
             echo "<meta http-equiv='refresh' content='2'>";
         } else {
             $msg = "<div class='alert-error'>Error: " . mysqli_error($conn) . "</div>";
@@ -27,13 +27,12 @@ if (isset($_POST['submit_review'])) {
     }
 }
 
-// --- FETCH REVIEWS ---
+
 $sql_fetch = "SELECT * FROM hospital_reviews ORDER BY created_at DESC";
 $result = mysqli_query($conn, $sql_fetch);
 ?>
 
 <style>
-    /* PAGE HEADER */
     .page-header {
         background: linear-gradient(135deg, #f8f9fa 0%, #eef2ff 100%);
         padding: 80px 0;
@@ -55,14 +54,14 @@ $result = mysqli_query($conn, $sql_fetch);
         margin: 0 auto;
     }
 
-    /* CONTAINER */
+
     .review-container {
         max-width: 1200px;
         margin: 0 auto 80px auto;
         padding: 0 20px;
     }
 
-    /* FORM SECTION */
+
     .form-section {
         max-width: 700px;
         margin: 0 auto 60px auto;
@@ -74,7 +73,7 @@ $result = mysqli_query($conn, $sql_fetch);
         text-align: center;
     }
 
-    /* STAR RATING CSS */
+
     .rate {
         display: inline-block;
         height: 46px;
@@ -154,7 +153,7 @@ $result = mysqli_query($conn, $sql_fetch);
         transform: translateY(-3px);
     }
 
-    /* REVIEW GRID */
+
     .review-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -176,7 +175,7 @@ $result = mysqli_query($conn, $sql_fetch);
         box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
     }
 
-    /* Quote Icon */
+
     .review-card::before {
         content: '“';
         position: absolute;
@@ -188,7 +187,7 @@ $result = mysqli_query($conn, $sql_fetch);
         line-height: 0;
     }
 
-    /* User Info */
+
     .user-info {
         display: flex;
         align-items: center;
@@ -237,7 +236,7 @@ $result = mysqli_query($conn, $sql_fetch);
         font-style: italic;
     }
 
-    /* Alerts */
+
     .alert-success {
         background: #dcfce7;
         color: #16a34a;
