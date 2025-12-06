@@ -38,7 +38,7 @@ $upcoming_query = "SELECT a.*, d.name as doc_name
                    ORDER BY a.appointment_time ASC";
 $res_upcoming = mysqli_query($conn, $upcoming_query);
 
-// FETCH PRESCRIPTIONS (NEW SECTION)
+// FETCH PRESCRIPTIONS
 $presc_query = "SELECT p.*, d.name as doc_name 
                 FROM prescriptions p 
                 JOIN doctors d ON p.doctor_id = d.id 
@@ -79,6 +79,8 @@ $paid_history = mysqli_query($conn, "SELECT * FROM payments WHERE patient_id='$p
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
+            gap: 20px;
         }
 
         .stats-grid {
@@ -201,7 +203,20 @@ $paid_history = mysqli_query($conn, "SELECT * FROM payments WHERE patient_id='$p
                 <h1>Hello, <?= htmlspecialchars($patient_name) ?></h1>
                 <p>Manage your health appointments and records.</p>
             </div>
-            <a href="book_appointment.php" style="background:white; color:#0062cc; padding:10px 20px; border-radius:30px; text-decoration:none; font-weight:bold;">+ Book Appointment</a>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <a href="book_appointment.php" style="background:white; color:#0062cc; padding:10px 20px; border-radius:30px; text-decoration:none; font-weight:bold;">
+                    + Book Appointment
+                </a>
+
+                <a href="inbox.php" style="background:rgba(255,255,255,0.2); border:1px solid white; color:white; padding:10px 20px; border-radius:30px; text-decoration:none; font-weight:bold;">
+                    <i class="fas fa-comments"></i> Medical Chat
+                </a>
+
+                <a href="support_chat.php" style="background:rgba(255,255,255,0.2); border:1px solid white; color:white; padding:10px 20px; border-radius:30px; text-decoration:none; font-weight:bold;">
+                    <i class="fas fa-headset"></i> Support
+                </a>
+            </div>
         </div>
 
         <div class="stats-grid">

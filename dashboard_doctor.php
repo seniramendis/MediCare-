@@ -12,24 +12,18 @@ $doctor_id = $_SESSION['user_id'];
 $doctor_name = $_SESSION['username'];
 $display_name = trim(str_ireplace("Dr.", "", $doctor_name));
 
-// --- HANDLE PRESCRIPTION SUBMISSION (UPDATED) ---
+// --- HANDLE PRESCRIPTION SUBMISSION ---
 if (isset($_POST['send_rx'])) {
     $p_id = $_POST['rx_patient_id'];
     $diag = mysqli_real_escape_string($conn, $_POST['diagnosis']);
     $meds = mysqli_real_escape_string($conn, $_POST['medication']);
 
-    // INSERT query with the new 'dosage_instructions' column
     $sql = "INSERT INTO prescriptions (doctor_id, patient_id, diagnosis, medicine_list, dosage_instructions) 
             VALUES ('$doctor_id', '$p_id', '$diag', 'General Rx', '$meds')";
 
     if (mysqli_query($conn, $sql)) {
-        // ✅ SUCCESS POPUP
-        echo "<script>
-                alert('✅ Prescription Sent Successfully!'); 
-                window.location.href='dashboard_doctor.php';
-              </script>";
+        echo "<script>alert('✅ Prescription Sent Successfully!'); window.location.href='dashboard_doctor.php';</script>";
     } else {
-        // ❌ ERROR POPUP
         echo "<script>alert('Error: " . mysqli_error($conn) . "');</script>";
     }
 }
@@ -43,7 +37,6 @@ if (isset($_POST['send_bill'])) {
 
     $check = mysqli_query($conn, "SELECT COUNT(*) as count FROM invoices WHERE appointment_id='$appt_id'");
     if (mysqli_fetch_assoc($check)['count'] < 2) {
-        // Ensure table has 'service_name' or change this query to match your DB column
         $sql = "INSERT INTO invoices (patient_id, doctor_id, appointment_id, amount, service_name, status) VALUES ('$pat_id', '$doctor_id', '$appt_id', '$amount', '$service', 'unpaid')";
         if (mysqli_query($conn, $sql)) {
             echo "<script>alert('✅ Invoice sent!'); window.location.href='dashboard_doctor.php';</script>";
@@ -223,9 +216,20 @@ $confirmed_appts = mysqli_query($conn, "SELECT a.id, a.patient_id, a.appointment
 <body>
 
     <div class="dash-container">
-        <div style="background: #0c5adb; color: white; padding: 30px; border-radius: 15px; margin-bottom: 30px;">
-            <h1>Dr. <?= htmlspecialchars($display_name) ?></h1>
-            <p>Live Dashboard Overview</p>
+        <div style="background: #0c5adb; color: white; padding: 30px; border-radius: 15px; margin-bottom: 30px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:20px;">
+            <div>
+                <h1 style="margin:0;">Dr. <?= htmlspecialchars($display_name) ?></h1>
+                <p style="margin:0; opacity:0.8;">Live Dashboard Overview</p>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <a href="doctor_inbox.php" style="background:white; color:#0c5adb; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:bold; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-user-injured"></i> Patients Chat
+                </a>
+                <a href="doctor_support.php" style="background:rgba(255,255,255,0.2); border:1px solid white; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:bold; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-headset"></i> Admin Support
+                </a>
+            </div>
         </div>
 
         <div class="stats-grid">
@@ -271,9 +275,7 @@ $confirmed_appts = mysqli_query($conn, "SELECT a.id, a.patient_id, a.appointment
                         <?php endwhile; ?>
                     </select>
                     <input type="text" name="diagnosis" class="form-control" placeholder="Diagnosis" required>
-
                     <textarea name="medication" class="form-control" placeholder="Medication & Dosage Instructions..." required></textarea>
-
                     <button type="submit" name="send_rx" class="btn-action">Send Rx</button>
                 </form>
             </div>
@@ -360,7 +362,6 @@ $confirmed_appts = mysqli_query($conn, "SELECT a.id, a.patient_id, a.appointment
             }, function(data) {
                 let upcomingRows = '',
                     historyRows = '';
-
                 if (data.length === 0) {
                     upcomingRows = '<tr><td colspan="5" style="padding:20px; text-align:center; color:#999;">No appointments found.</td></tr>';
                 } else {
@@ -369,31 +370,17 @@ $confirmed_appts = mysqli_query($conn, "SELECT a.id, a.patient_id, a.appointment
                         let displayTime = appt.formatted_time;
 
                         if (status === 'completed') {
-                            historyRows += `<tr>
-                            <td>${displayTime}</td>
-                            <td>${appt.patient_name}</td>
-                            <td>${appt.reason}</td>
-                            <td><span class="status-badge st-Completed">Completed</span></td>
-                            <td><button class="btn-icon btn-trash" onclick="deleteAppt(${appt.id})"><i class="fas fa-trash"></i></button></td>
-                        </tr>`;
+                            historyRows += `<tr><td>${displayTime}</td><td>${appt.patient_name}</td><td>${appt.reason}</td><td><span class="status-badge st-Completed">Completed</span></td><td><button class="btn-icon btn-trash" onclick="deleteAppt(${appt.id})"><i class="fas fa-trash"></i></button></td></tr>`;
                         } else {
                             let buttons = '';
                             let badgeClass = (status === 'confirmed') ? 'st-Confirmed' : 'st-Pending';
-
                             if (status === 'confirmed') {
                                 buttons = `<button class="btn-icon btn-check" onclick="updateAppt(${appt.id}, 'Completed')"><i class="fas fa-check-double"></i> Complete</button>`;
                             } else {
                                 buttons = `<button class="btn-icon btn-accept" onclick="updateAppt(${appt.id}, 'Confirmed')"><i class="fas fa-check"></i> Accept</button>
                                        <button class="btn-icon btn-trash" onclick="deleteAppt(${appt.id})"><i class="fas fa-trash"></i></button>`;
                             }
-
-                            upcomingRows += `<tr>
-                            <td>${displayTime}</td>
-                            <td>${appt.patient_name}</td>
-                            <td>${appt.reason}</td>
-                            <td><span class="status-badge ${badgeClass}">${appt.status}</span></td>
-                            <td>${buttons}</td>
-                        </tr>`;
+                            upcomingRows += `<tr><td>${displayTime}</td><td>${appt.patient_name}</td><td>${appt.reason}</td><td><span class="status-badge ${badgeClass}">${appt.status}</span></td><td>${buttons}</td></tr>`;
                         }
                     });
                 }
@@ -429,7 +416,6 @@ $confirmed_appts = mysqli_query($conn, "SELECT a.id, a.patient_id, a.appointment
             }
         }
     </script>
-
 </body>
 
 </html>

@@ -14,11 +14,8 @@ if (isset($_GET['id'])) {
 
     if (mysqli_num_rows($result) > 0) {
         $doctor = mysqli_fetch_assoc($result);
-
-        // SET DYNAMIC PAGE TITLE
         $page_title = $doctor['name'];
     } else {
-        // Doctor not found handling
         $page_title = "Doctor Not Found";
         include 'header.php';
         echo "<h2 style='text-align:center; padding:50px; color:#ef4444;'>Doctor not found!</h2>";
@@ -26,12 +23,10 @@ if (isset($_GET['id'])) {
         exit();
     }
 } else {
-    // No ID provided
     header("Location: Doctor.php");
     exit();
 }
 
-// 3. INCLUDE HEADER (Now it will use the correct $page_title)
 include 'header.php';
 
 // 4. HANDLE REVIEW SUBMISSION
@@ -39,11 +34,7 @@ $msg = "";
 if (isset($_POST['submit_review'])) {
     if (isset($_SESSION['user_id'])) {
         $user_id = $_SESSION['user_id'];
-
-        // Use 'full_name' if your DB uses that, otherwise 'username'
-        // Fallback to 'User' if session name isn't set
         $user_name = isset($_SESSION['username']) ? $_SESSION['username'] : 'User';
-
         $rating = $_POST['rating'];
         $review_text = mysqli_real_escape_string($conn, $_POST['review']);
 
@@ -203,6 +194,18 @@ $reviews_result = mysqli_query($conn, $reviews_sql);
     .btn-msg:hover {
         background: #eef4ff;
         transform: translateY(-3px);
+    }
+
+    /* Disabled/Login button style */
+    .btn-msg.login-req {
+        border-color: #9ca3af;
+        color: #6b7280;
+    }
+
+    .btn-msg.login-req:hover {
+        background: #f3f4f6;
+        color: var(--primary-color);
+        border-color: var(--primary-color);
     }
 
     /* --- CONTENT AREA (Right) --- */
@@ -418,8 +421,8 @@ $reviews_result = mysqli_query($conn, $reviews_sql);
         <span class="doc-specialty"><?php echo htmlspecialchars($doctor['specialty']); ?></span>
 
         <ul class="info-list">
-            <li><i class="fas fa-graduation-cap"></i> <?php echo htmlspecialchars($doctor['qualification']); ?></li>
-            <li><i class="fas fa-briefcase"></i> <?php echo htmlspecialchars($doctor['experience']); ?>+ Years Experience</li>
+            <li><i class="fas fa-graduation-cap"></i> <?php echo htmlspecialchars($doctor['qualification'] ?? 'MBBS'); ?></li>
+            <li><i class="fas fa-briefcase"></i> <?php echo htmlspecialchars($doctor['experience'] ?? '5'); ?>+ Years Experience</li>
             <li><i class="fas fa-map-marker-alt"></i> MediCare+ Main Hospital</li>
             <li><i class="fas fa-language"></i> English, Sinhala</li>
         </ul>
@@ -427,15 +430,21 @@ $reviews_result = mysqli_query($conn, $reviews_sql);
         <div class="sidebar-btns">
             <a href="book_appointment.php" class="btn-book">Book Appointment</a>
 
-            <a href="inbox.php?doctor_id=<?php echo $doctor['id']; ?>" class="btn-msg">
-                <i class="far fa-comments"></i> Message Doctor
-            </a>
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <a href="inbox.php?doctor_id=<?php echo $doctor['id']; ?>" class="btn-msg">
+                    <i class="far fa-comments"></i> Message Doctor
+                </a>
+            <?php else: ?>
+                <a href="login.php" class="btn-msg login-req" onclick="return confirm('Please login to message the doctor.');">
+                    <i class="fas fa-lock"></i> Login to Message
+                </a>
+            <?php endif; ?>
         </div>
     </div>
 
     <div class="profile-content">
         <div class="section-title"><i class="far fa-user"></i> About Doctor</div>
-        <p class="bio-text"><?php echo nl2br(htmlspecialchars($doctor['bio'])); ?></p>
+        <p class="bio-text"><?php echo nl2br(htmlspecialchars($doctor['bio'] ?? 'Experienced specialist dedicated to patient care.')); ?></p>
 
         <div class="section-title"><i class="far fa-clock"></i> Availability</div>
         <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 40px;">
