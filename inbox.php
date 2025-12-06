@@ -1,9 +1,9 @@
 <?php
 $page_title = "Messages";
-include 'header.php';
+session_start();
 include 'db_connect.php';
 
-// 1. SECURITY CHECK
+// 1. SECURITY CHECK (Prevents access if not logged in)
 if (!isset($_SESSION['user_id'])) {
     echo "<script>window.location.href='login.php';</script>";
     exit();
@@ -56,6 +56,8 @@ if ($selected_doctor_id) {
     $active_doc = mysqli_fetch_assoc($doc_query);
     $msg_query = mysqli_query($conn, "SELECT * FROM messages WHERE user_id='$user_id' AND doctor_id='$selected_doctor_id' ORDER BY created_at ASC");
 }
+
+include 'header.php';
 ?>
 
 <style>

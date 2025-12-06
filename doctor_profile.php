@@ -189,6 +189,7 @@ $reviews_result = mysqli_query($conn, $reviews_sql);
         align-items: center;
         justify-content: center;
         gap: 10px;
+        cursor: pointer;
     }
 
     .btn-msg:hover {
@@ -435,7 +436,7 @@ $reviews_result = mysqli_query($conn, $reviews_sql);
                     <i class="far fa-comments"></i> Message Doctor
                 </a>
             <?php else: ?>
-                <a href="login.php" class="btn-msg login-req" onclick="return confirm('Please login to message the doctor.');">
+                <a href="login.php" class="btn-msg login-req" onclick="return confirm('You must log in first to message the doctor.');">
                     <i class="fas fa-lock"></i> Login to Message
                 </a>
             <?php endif; ?>
@@ -455,6 +456,7 @@ $reviews_result = mysqli_query($conn, $reviews_sql);
         <div class="section-title"><i class="far fa-comment-alt"></i> Patient Reviews</div>
         <div class="reviews-container">
             <?php echo $msg; ?>
+
             <?php if (isset($_SESSION['user_id'])): ?>
                 <div class="review-form-box">
                     <form method="POST">
