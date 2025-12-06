@@ -18,9 +18,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $reason = mysqli_real_escape_string($conn, $_POST['message']);
     $full_time = date('Y-m-d H:i:s', strtotime("$date $time"));
 
-    // FIXED QUERY: Removed 'patient_name'. Only inserting 'patient_id'.
+    // FIX: Status is 'Pending' so Doctor can Accept it
     $sql = "INSERT INTO appointments (doctor_id, patient_id, appointment_time, reason, status) 
-            VALUES ('$doctor_id', '$patient_id', '$full_time', '$reason', 'Scheduled')";
+            VALUES ('$doctor_id', '$patient_id', '$full_time', '$reason', 'Pending')";
 
     if (mysqli_query($conn, $sql)) {
         $msg = "<div style='background:#dbeafe; color:#1e40af; padding:15px; border-radius:8px; margin-bottom:20px; border: 1px solid #bfdbfe; display:flex; align-items:center; gap:10px;'>
@@ -43,7 +43,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <script src="https://kit.fontawesome.com/9e166a3863.js" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* --- BLUE THEME STYLING --- */
         :root {
             --primary-color: #0c5adb;
             --primary-dark: #0946a8;
@@ -166,12 +165,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <select name="doctor_id" required>
                         <option value="">-- Choose a Specialist --</option>
                         <?php
-                        // Ensure we only fetch users who are actually doctors
-                        $doc_res = mysqli_query($conn, "SELECT id, full_name, specialty FROM users WHERE role='doctor'");
+                        // FIX: Fetch from 'doctors' table (not users)
+                        $doc_res = mysqli_query($conn, "SELECT id, name, specialty FROM doctors");
                         while ($row = mysqli_fetch_assoc($doc_res)) {
-                            // Display Doctor Name and Specialty
                             $specialty = !empty($row['specialty']) ? " (" . $row['specialty'] . ")" : "";
-                            echo "<option value='" . $row['id'] . "'>Dr. " . $row['full_name'] . $specialty . "</option>";
+                            // Using 'name' instead of 'full_name' as per doctors table structure
+                            echo "<option value='" . $row['id'] . "'>Dr. " . $row['name'] . $specialty . "</option>";
                         }
                         ?>
                     </select>

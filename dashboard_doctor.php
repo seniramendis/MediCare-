@@ -29,18 +29,21 @@ if (isset($_POST['send_bill'])) {
 
     $check = mysqli_query($conn, "SELECT COUNT(*) as count FROM invoices WHERE appointment_id='$appt_id'");
     if (mysqli_fetch_assoc($check)['count'] < 2) {
-        $sql = "INSERT INTO invoices (patient_id, doctor_id, appointment_id, amount, service_name, status) VALUES ('$pat_id', '$doctor_id', '$appt_id', '$amount', '$service', 'unpaid')";
+        // FIX: Changed 'service_name' to 'service_description' to match your DB
+        $sql = "INSERT INTO invoices (patient_id, doctor_id, appointment_id, amount, service_description, status) VALUES ('$pat_id', '$doctor_id', '$appt_id', '$amount', '$service', 'unpaid')";
         if (mysqli_query($conn, $sql)) {
             echo "<script>alert('✅ Invoice sent!');</script>";
+        } else {
+            // Added Error Reporting so you can see if it fails
+            echo "<script>alert('Error: " . mysqli_error($conn) . "');</script>";
         }
     } else {
-        echo "<script>alert('⚠️ Limit reached');</script>";
+        echo "<script>alert('⚠️ Limit reached or Invoice already sent');</script>";
     }
 }
 
 $my_patients = mysqli_query($conn, "SELECT DISTINCT u.id, u.full_name FROM users u JOIN appointments a ON u.id = a.patient_id WHERE a.doctor_id='$doctor_id'");
 
-// CORRECTED QUERY: Use JOIN to get patient name for the dropdown
 $confirmed_appts = mysqli_query($conn, "SELECT a.id, a.patient_id, a.appointment_time, u.full_name 
                                         FROM appointments a 
                                         JOIN users u ON a.patient_id = u.id 
@@ -154,7 +157,6 @@ $confirmed_appts = mysqli_query($conn, "SELECT a.id, a.patient_id, a.appointment
             font-size: 14px;
         }
 
-        /* Status Badges */
         .status-badge {
             padding: 5px 10px;
             border-radius: 15px;
@@ -168,25 +170,15 @@ $confirmed_appts = mysqli_query($conn, "SELECT a.id, a.patient_id, a.appointment
             color: #0062cc;
         }
 
-        /* Blue */
         .st-Pending {
             background: #fff3e0;
             color: #ff9800;
         }
 
-        /* Orange */
         .st-Completed {
             background: #dcfce7;
             color: #16a34a;
         }
-
-        /* Green */
-        .st-Scheduled {
-            background: #fff3e0;
-            color: #ff9800;
-        }
-
-        /* Orange */
 
         .btn-icon {
             padding: 5px 10px;
@@ -273,7 +265,7 @@ $confirmed_appts = mysqli_query($conn, "SELECT a.id, a.patient_id, a.appointment
 
             <div class="content-box">
                 <h3>Send Invoice</h3>
-                <p style="font-size:12px; color:#666;">Note: You must 'Accept' an appointment below before you can bill it.</p>
+                <p style="font-size:12px; color:#666;">Note: You must 'Accept' an appointment below to enable billing.</p>
                 <form method="POST">
                     <select name="bill_appt_id" class="form-control" required>
                         <option value="" disabled selected>Select Confirmed Appointment...</option>
@@ -373,7 +365,6 @@ $confirmed_appts = mysqli_query($conn, "SELECT a.id, a.patient_id, a.appointment
                             let buttons = '';
                             let badgeClass = (status === 'confirmed') ? 'st-Confirmed' : 'st-Pending';
 
-                            // FORCE BUTTONS: If not Confirmed, show Accept. If Confirmed, show Complete.
                             if (status === 'confirmed') {
                                 buttons = `<button class="btn-icon btn-check" onclick="updateAppt(${appt.id}, 'Completed')"><i class="fas fa-check-double"></i> Complete</button>`;
                             } else {
@@ -402,10 +393,13 @@ $confirmed_appts = mysqli_query($conn, "SELECT a.id, a.patient_id, a.appointment
                 id: id,
                 status: status
             }, function() {
-                fetchAppointments();
-                if (status === 'Confirmed') setTimeout(function() {
-                    location.reload();
-                }, 500);
+                if (status === 'Confirmed') {
+                    setTimeout(function() {
+                        location.reload();
+                    }, 500);
+                } else {
+                    fetchAppointments();
+                }
             });
         }
 

@@ -19,16 +19,16 @@ $my_rx_count = mysqli_fetch_assoc($rx_query)['total'];
 $due_query = mysqli_query($conn, "SELECT SUM(amount) as total FROM invoices WHERE patient_id='$patient_id' AND status='unpaid'");
 $total_due = mysqli_fetch_assoc($due_query)['total'] ?? 0;
 
-// Upcoming
-$upcoming_query = "SELECT a.*, u.full_name as doc_name FROM appointments a JOIN users u ON a.doctor_id = u.id WHERE a.patient_id='$patient_id' AND a.status != 'Completed' ORDER BY a.appointment_time ASC";
+// FIX: JOIN with 'doctors' table instead of 'users'
+$upcoming_query = "SELECT a.*, d.name as doc_name FROM appointments a JOIN doctors d ON a.doctor_id = d.id WHERE a.patient_id='$patient_id' AND a.status != 'Completed' ORDER BY a.appointment_time ASC";
 $res_upcoming = mysqli_query($conn, $upcoming_query);
 
-// History
-$history_query = "SELECT a.*, u.full_name as doc_name FROM appointments a JOIN users u ON a.doctor_id = u.id WHERE a.patient_id='$patient_id' AND a.status = 'Completed' ORDER BY a.appointment_time DESC";
+// FIX: JOIN with 'doctors' table
+$history_query = "SELECT a.*, d.name as doc_name FROM appointments a JOIN doctors d ON a.doctor_id = d.id WHERE a.patient_id='$patient_id' AND a.status = 'Completed' ORDER BY a.appointment_time DESC";
 $res_history = mysqli_query($conn, $history_query);
 
-// Rx
-$res_rx = mysqli_query($conn, "SELECT p.*, u.full_name as doc_name FROM prescriptions p JOIN users u ON p.doctor_id = u.id WHERE p.patient_id='$patient_id' ORDER BY p.created_at DESC");
+// FIX: JOIN with 'doctors' table for Prescriptions
+$res_rx = mysqli_query($conn, "SELECT p.*, d.name as doc_name FROM prescriptions p JOIN doctors d ON p.doctor_id = d.id WHERE p.patient_id='$patient_id' ORDER BY p.created_at DESC");
 
 // Payment History
 $paid_history = mysqli_query($conn, "SELECT * FROM payments WHERE patient_id='$patient_id' ORDER BY paid_at DESC LIMIT 5");
@@ -152,7 +152,8 @@ $paid_history = mysqli_query($conn, "SELECT * FROM payments WHERE patient_id='$p
             color: #0c5adb;
         }
 
-        .Scheduled {
+        .Scheduled,
+        .Pending {
             background: #fff3e0;
             color: #f59e0b;
         }
