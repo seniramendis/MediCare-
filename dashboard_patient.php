@@ -38,6 +38,14 @@ $upcoming_query = "SELECT a.*, d.name as doc_name
                    ORDER BY a.appointment_time ASC";
 $res_upcoming = mysqli_query($conn, $upcoming_query);
 
+// FETCH PRESCRIPTIONS (NEW SECTION)
+$presc_query = "SELECT p.*, d.name as doc_name 
+                FROM prescriptions p 
+                JOIN doctors d ON p.doctor_id = d.id 
+                WHERE p.patient_id='$patient_id' 
+                ORDER BY p.created_at DESC";
+$res_presc = mysqli_query($conn, $presc_query);
+
 // PAYMENT HISTORY
 $paid_history = mysqli_query($conn, "SELECT * FROM payments WHERE patient_id='$patient_id' ORDER BY paid_at DESC LIMIT 5");
 ?>
@@ -140,6 +148,7 @@ $paid_history = mysqli_query($conn, "SELECT * FROM payments WHERE patient_id='$p
         .pay-table td {
             padding: 12px 0;
             border-bottom: 1px solid #f9f9f9;
+            vertical-align: top;
         }
 
         .status-badge {
@@ -263,8 +272,6 @@ $paid_history = mysqli_query($conn, "SELECT * FROM payments WHERE patient_id='$p
                 </tr>
                 <?php if (mysqli_num_rows($res_upcoming) > 0): ?>
                     <?php while ($a = mysqli_fetch_assoc($res_upcoming)):
-                        // --- FIX FOR "DR. DR." ISSUE ---
-                        // We remove "Dr." (case insensitive) from the DB name first, then add it back cleanly.
                         $clean_name = trim(str_ireplace(["Dr.", "Dr "], "", $a['doc_name']));
                     ?>
                         <tr>
@@ -283,6 +290,37 @@ $paid_history = mysqli_query($conn, "SELECT * FROM payments WHERE patient_id='$p
                 <?php endif; ?>
             </table>
         </div>
+
+        <div class="content-box" style="border-top: 4px solid #6f42c1;">
+            <h3 style="margin-top:0; color:#6f42c1;">My Prescriptions</h3>
+            <table class="pay-table">
+                <tr>
+                    <th style="width: 15%;">Date</th>
+                    <th style="width: 20%;">Doctor</th>
+                    <th style="width: 20%;">Diagnosis</th>
+                    <th style="width: 45%;">Medicines & Dosage</th>
+                </tr>
+                <?php if (mysqli_num_rows($res_presc) > 0): ?>
+                    <?php while ($rx = mysqli_fetch_assoc($res_presc)):
+                        $doc_name = trim(str_ireplace(["Dr.", "Dr "], "", $rx['doc_name']));
+                    ?>
+                        <tr>
+                            <td><?= date('M d, Y', strtotime($rx['created_at'])) ?></td>
+                            <td><strong>Dr. <?= htmlspecialchars($doc_name) ?></strong></td>
+                            <td><?= htmlspecialchars($rx['diagnosis']) ?></td>
+                            <td style="line-height: 1.6;">
+                                <?= nl2br(htmlspecialchars($rx['dosage_instructions'] ?? $rx['medicine_list'])) ?>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="4" style="text-align:center; color:#999; padding: 20px;">No prescriptions found.</td>
+                    </tr>
+                <?php endif; ?>
+            </table>
+        </div>
+
     </div>
 
     <script>
